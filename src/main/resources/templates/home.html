@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter App - Home BuonoRiccitiello</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/img/twitter-logo.svg}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="twitter-layout">
+    <div th:if="${success}" class="toast toast-success" th:text="${success}"></div>
+    <div th:if="${error}" class="toast toast-error" th:text="${error}"></div>
+
+    <div class="app-shell">
+        <!-- Colonna sinistra fissa: navigazione stile Twitter/X -->
+        <aside class="left-nav">
+            <a th:href="@{/home}" class="brand-link" aria-label="Twitter App">
+                <img th:src="@{/img/twitter-logo.svg}" alt="Twitter App" class="brand-logo">
+                <span class="brand-text">Twitter App</span>
+            </a>
+
+            <nav class="main-menu">
+                <a th:href="@{/home}" class="nav-item active">
+                    <span class="nav-icon">⌂</span>
+                    <span>Home</span>
+                </a>
+                <a th:href="@{/profile}" class="nav-item">
+                    <span class="nav-icon">◉</span>
+                    <span>Profilo</span>
+                </a>
+                <a th:if="${loggedInUser.role.name() == 'ADMIN'}"
+                   th:href="@{/admin}"
+                   class="nav-item">
+                    <span class="nav-icon">⚙</span>
+                    <span>Admin</span>
+                </a>
+                <a href="#" class="nav-item nav-logout" data-logout-open>
+                    <span class="nav-icon">⇢</span>
+                    <span>Esci</span>
+                </a>
+            </nav>
+
+            <div class="left-account-card">
+                <img class="avatar avatar-md"
+                     th:src="${loggedInUser.profileImagePath != null and loggedInUser.profileImagePath != '' ? loggedInUser.profileImagePath : '/img/default-avatar.svg'}"
+                     alt="Immagine profilo">
+                <div class="account-text">
+                    <strong th:text="${loggedInUser.username}"></strong>
+                    <small th:text="${loggedInUser.email}"></small>
+                </div>
+                <a th:href="@{/profile}" class="account-more" title="Apri profilo">•••</a>
+            </div>
+        </aside>
+
+        <!-- Colonna centrale: feed dei messaggi -->
+        <main class="feed-column">
+            <header class="feed-header">
+                <h1>Home</h1>
+                <p>Messaggi pubblicati da te e dagli utenti che segui</p>
+            </header>
+
+            <section class="feed-card">
+                <div th:if="${#lists.isEmpty(feedMessages)}" class="empty-state">
+                    <h2>Nessun messaggio ancora</h2>
+                    <p>Pubblica un messaggio oppure segui un altro utente per popolare la home.</p>
+                </div>
+
+                <article th:each="msg : ${feedMessages}" class="tweet-card">
+                    <img class="avatar avatar-sm"
+                         th:src="${msg.author.profileImagePath != null and msg.author.profileImagePath != '' ? msg.author.profileImagePath : '/img/default-avatar.svg'}"
+                         alt="Avatar autore">
+
+                    <div class="tweet-body">
+                        <div class="tweet-topline">
+                            <div>
+                                <strong th:text="${msg.author.username}"></strong>
+                                <span class="tweet-date" th:text="${#temporals.format(msg.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                            </div>
+
+                            <form th:if="${msg.author.id == loggedInUser.id}"
+                                  th:action="@{/messages/delete/{id}(id=${msg.id})}"
+                                  method="post"
+                                  class="inline-form">
+                                <input type="hidden" name="returnTo" value="/home">
+                                <button type="submit"
+                                        class="btn btn-small btn-danger btn-ghost-danger"
+                                        onclick="return confirm('Vuoi eliminare questo messaggio?')">
+                                    Elimina
+                                </button>
+                            </form>
+                        </div>
+
+                        <p class="tweet-content" th:text="${msg.content}"></p>
+
+                        <div class="tweet-meta">
+                            <span th:if="${msg.hashtag != null}" th:text="'#' + ${msg.hashtag.name}"></span>
+                            <span th:text="${msg.channel}"></span>
+                        </div>
+                    </div>
+                </article>
+            </section>
+        </main>
+
+        <!-- Colonna destra: pubblicazione messaggio sopra utenti suggeriti -->
+        <aside class="right-panel">
+            <section class="card compose-card">
+                <h2>Pubblica un messaggio</h2>
+
+                <form th:action="@{/messages}" method="post" th:object="${messageForm}">
+                    <div class="compose-row">
+                        <img class="avatar avatar-sm"
+                             th:src="${loggedInUser.profileImagePath != null and loggedInUser.profileImagePath != '' ? loggedInUser.profileImagePath : '/img/default-avatar.svg'}"
+                             alt="Il tuo avatar">
+                        <textarea id="content" th:field="*{content}"
+                                  class="compose-textarea"
+                                  rows="4"
+                                  maxlength="140"
+                                  placeholder="Che succede?"
+                                  required></textarea>
+                    </div>
+                    <span th:if="${#fields.hasErrors('content')}"
+                          class="error-text" th:errors="*{content}"></span>
+
+                    <div class="form-group compact">
+                        <label for="hashtag">Hashtag opzionale</label>
+                        <input type="text" id="hashtag" th:field="*{hashtag}"
+                               class="form-control" placeholder="es. #progetto">
+                    </div>
+
+                    <div class="compose-actions">
+                        <select id="channel" th:field="*{channel}" class="form-control compact-select" required>
+                            <option value="">Canale</option>
+                            <option value="WEB">Web</option>
+                            <option value="SMS">SMS</option>
+                            <option value="EMAIL">Email</option>
+                            <option value="IM">IM</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">Pubblica</button>
+                    </div>
+                    <span th:if="${#fields.hasErrors('channel')}"
+                          class="error-text" th:errors="*{channel}"></span>
+                </form>
+            </section>
+
+            <section class="card suggestions-card">
+                <h2>Utenti suggeriti</h2>
+
+                <div th:if="${#lists.isEmpty(allUsers)}" class="text-muted">
+                    <p>Nessun utente disponibile al momento.</p>
+                </div>
+
+                <div th:each="user : ${allUsers}"
+                     th:if="${user.id != loggedInUser.id}"
+                     class="user-row">
+                    <img class="avatar avatar-xs"
+                         th:src="${user.profileImagePath != null and user.profileImagePath != '' ? user.profileImagePath : '/img/default-avatar.svg'}"
+                         alt="Avatar utente">
+
+                    <div class="user-info">
+                        <strong th:text="${user.username}"></strong>
+                        <small th:text="${user.email}"></small>
+                    </div>
+
+                    <form th:if="${!followingIds.contains(user.id)}"
+                          th:action="@{/follow/{id}(id=${user.id})}"
+                          method="post"
+                          class="user-action">
+                        <input type="hidden" name="returnTo" value="/home">
+                        <button type="submit" class="btn btn-small btn-follow">Segui</button>
+                    </form>
+
+                    <form th:if="${followingIds.contains(user.id)}"
+                          th:action="@{/unfollow/{id}(id=${user.id})}"
+                          method="post"
+                          class="user-action">
+                        <input type="hidden" name="returnTo" value="/home">
+                        <button type="submit" class="btn btn-small btn-unfollow">Smetti</button>
+                    </form>
+                </div>
+            </section>
+        </aside>
+    </div>
+
+    <div id="logoutModal" class="logout-modal" aria-hidden="true">
+        <div class="logout-modal-card" role="dialog" aria-modal="true" aria-labelledby="logoutTitle">
+            <h2 id="logoutTitle">Sei sicuro di voler uscire?</h2>
+            <div class="logout-modal-actions">
+                <a th:href="@{/logout}" class="btn btn-danger">Sì</a>
+                <button type="button" class="btn btn-secondary" data-logout-cancel>No</button>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/app-ui.js}"></script>
+</body>
+</html>

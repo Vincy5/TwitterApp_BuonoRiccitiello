@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter App - Admin BuonoRiccitiello</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/img/twitter-logo.svg}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="navbar">
+        <h1 class="navbar-title">
+            <img th:src="@{/img/twitter-logo.svg}" alt="Twitter App" class="navbar-logo">
+            <span><strong>Twitter App</strong> <small>Admin</small></span>
+        </h1>
+        <div class="navbar-user">
+            <span th:if="${loggedInUser}" th:text="'Admin: ' + ${loggedInUser.username}"></span>
+            <a href="#" class="btn btn-logout" data-logout-open>Esci</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Messaggio di errore -->
+        <div th:if="${error}" class="alert alert-error">
+            <p th:text="${error}"></p>
+        </div>
+
+        <!-- Messaggio di successo -->
+        <div th:if="${success}" class="alert alert-success">
+            <p th:text="${success}"></p>
+        </div>
+
+        <!-- Messaggio informativo -->
+        <div th:if="${info}" class="alert alert-info">
+            <p th:text="${info}"></p>
+        </div>
+
+        <!-- Sezione 1: Gestione Utenti -->
+        <div class="card">
+            <h2>Gestione Utenti</h2>
+            
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Ruolo</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="user : ${allUsers}">
+                        <td th:text="${user.id}"></td>
+                        <td th:text="${user.username}"></td>
+                        <td th:text="${user.email}"></td>
+                        <td th:text="${user.role}"></td>
+                        <td>
+                            <form th:action="@{/admin/delete/{id}(id=${user.id})}" method="post" class="inline-form">
+                                <button type="submit" class="btn btn-small btn-danger" 
+                                        onclick="return confirm('Sei sicuro di voler eliminare questo utente?')">
+                                    Elimina
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Sezione 2: Ricerca Messaggi per Hashtag -->
+        <div class="card">
+            <h2>Ricerca Messaggi per Hashtag</h2>
+            
+            <form id="searchForm" class="form-search">
+                <div class="form-group">
+                    <label for="hashtagSearch">Nome Hashtag:</label>
+                    <input type="text" id="hashtagSearch" name="hashtag" 
+                           class="form-control" placeholder="es. divertente" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Cerca</button>
+            </form>
+
+            <!-- Risultati della ricerca -->
+            <div th:if="${searchResults}" class="search-results">
+                <h3 th:text="'Risultati per: #' + ${searchHashtag}"></h3>
+                
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Autore</th>
+                            <th>Messaggio</th>
+                            <th>Canale</th>
+                            <th>Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="msg : ${searchResults}">
+                            <td th:text="${msg.author.username}"></td>
+                            <td th:text="${msg.content}"></td>
+                            <td th:text="${msg.channel}"></td>
+                            <td th:text="${#temporals.format(msg.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Link torna a home -->
+        <div class="text-center">
+            <a th:href="@{/home}" class="btn btn-secondary">Torna a Home</a>
+        </div>
+    </div>
+
+    <div id="logoutModal" class="logout-modal" aria-hidden="true">
+        <div class="logout-modal-card" role="dialog" aria-modal="true" aria-labelledby="logoutTitle">
+            <h2 id="logoutTitle">Sei sicuro di voler uscire?</h2>
+            <div class="logout-modal-actions">
+                <a th:href="@{/logout}" class="btn btn-danger">Sì</a>
+                <button type="button" class="btn btn-secondary" data-logout-cancel>No</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Gestisci il submit del form di ricerca
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const hashtag = document.getElementById('hashtagSearch').value;
+            window.location.href = '/admin/hashtag/' + encodeURIComponent(hashtag);
+        });
+    </script>
+    <script th:src="@{/js/app-ui.js}"></script>
+</body>
+</html>

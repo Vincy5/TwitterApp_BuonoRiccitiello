@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter App - Registrazione BuonoRiccitiello</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/img/twitter-logo.svg}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container">
+        <div class="card card-auth">
+            <div class="auth-logo"><img th:src="@{/img/twitter-logo.svg}" alt="Twitter App"><span>Twitter App</span></div>
+            <h1>Registrazione</h1>
+            
+            <!-- Messaggio di errore -->
+            <div th:if="${error}" class="alert alert-error">
+                <p th:text="${error}"></p>
+            </div>
+
+            <!-- Form di registrazione -->
+            <form th:action="@{/register}" method="post" th:object="${registerForm}">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" th:field="*{username}" 
+                           class="form-control" required>
+                    <span th:if="${#fields.hasErrors('username')}" 
+                          class="error-text" th:errors="*{username}"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" th:field="*{email}" 
+                           class="form-control" required>
+                    <span th:if="${#fields.hasErrors('email')}" 
+                          class="error-text" th:errors="*{email}"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" th:field="*{password}" 
+                           class="form-control" required>
+                    <span th:if="${#fields.hasErrors('password')}" 
+                          class="error-text" th:errors="*{password}"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="passwordConfirm">Conferma Password:</label>
+                    <input type="password" id="passwordConfirm" th:field="*{passwordConfirm}" 
+                           class="form-control" required>
+                    <span th:if="${#fields.hasErrors('passwordConfirm')}" 
+                          class="error-text" th:errors="*{passwordConfirm}"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Registrati</button>
+            </form>
+
+            <!-- Link a login -->
+            <p class="text-center">
+                Hai già un account? <a th:href="@{/login}">Accedi qui</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

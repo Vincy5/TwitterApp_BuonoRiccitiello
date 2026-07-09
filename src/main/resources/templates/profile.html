@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter App - Profilo BuonoRiccitiello</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/img/twitter-logo.svg}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="twitter-layout">
+    <div th:if="${success}" class="toast toast-success" th:text="${success}"></div>
+    <div th:if="${error}" class="toast toast-error" th:text="${error}"></div>
+
+    <div class="app-shell">
+        <aside class="left-nav">
+            <a th:href="@{/home}" class="brand-link" aria-label="Twitter App">
+                <img th:src="@{/img/twitter-logo.svg}" alt="Twitter App" class="brand-logo">
+                <span class="brand-text">Twitter App</span>
+            </a>
+
+            <nav class="main-menu">
+                <a th:href="@{/home}" class="nav-item">
+                    <span class="nav-icon">⌂</span>
+                    <span>Home</span>
+                </a>
+                <a th:href="@{/profile}" class="nav-item active">
+                    <span class="nav-icon">◉</span>
+                    <span>Profilo</span>
+                </a>
+                <a th:if="${loggedInUser.role.name() == 'ADMIN'}"
+                   th:href="@{/admin}"
+                   class="nav-item">
+                    <span class="nav-icon">⚙</span>
+                    <span>Admin</span>
+                </a>
+                <a href="#" class="nav-item nav-logout" data-logout-open>
+                    <span class="nav-icon">⇢</span>
+                    <span>Esci</span>
+                </a>
+            </nav>
+
+            <div class="left-account-card">
+                <img class="avatar avatar-md"
+                     th:src="${loggedInUser.profileImagePath != null and loggedInUser.profileImagePath != '' ? loggedInUser.profileImagePath : '/img/default-avatar.svg'}"
+                     alt="Immagine profilo">
+                <div class="account-text">
+                    <strong th:text="${loggedInUser.username}"></strong>
+                    <small th:text="${loggedInUser.email}"></small>
+                </div>
+                <a th:href="@{/profile}" class="account-more" title="Apri profilo">•••</a>
+            </div>
+        </aside>
+
+        <main class="feed-column profile-main">
+            <section class="profile-hero">
+                <div class="profile-cover"></div>
+                <div class="profile-summary">
+                    <img class="avatar profile-hero-avatar"
+                         th:src="${loggedInUser.profileImagePath != null and loggedInUser.profileImagePath != '' ? loggedInUser.profileImagePath : '/img/default-avatar.svg'}"
+                         alt="Immagine profilo">
+                    <div class="profile-main-text">
+                        <h1 th:text="${loggedInUser.username}"></h1>
+                        <p th:text="${loggedInUser.email}"></p>
+                    </div>
+                </div>
+
+                <div class="profile-stats-row">
+                    <div>
+                        <strong th:text="${publishedMessagesCount}">0</strong>
+                        <span>Messaggi</span>
+                    </div>
+                    <a th:href="@{/profile(tab='following')}" th:classappend="${activeTab == 'following'} ? ' selected-stat' : ''">
+                        <strong th:text="${followingCount}">0</strong>
+                        <span>Seguiti</span>
+                    </a>
+                    <a th:href="@{/profile(tab='followers')}" th:classappend="${activeTab == 'followers'} ? ' selected-stat' : ''">
+                        <strong th:text="${followersCount}">0</strong>
+                        <span>Follower</span>
+                    </a>
+                </div>
+            </section>
+
+            <section class="card profile-list-card">
+                <div class="tab-header">
+                    <a th:href="@{/profile(tab='following')}" th:classappend="${activeTab == 'following'} ? ' active-tab' : ''">Seguiti</a>
+                    <a th:href="@{/profile(tab='followers')}" th:classappend="${activeTab == 'followers'} ? ' active-tab' : ''">Follower</a>
+                </div>
+
+                <div th:if="${#lists.isEmpty(profileUsers)}" class="empty-state compact-empty">
+                    <p th:if="${activeTab == 'following'}">Non segui ancora nessun utente.</p>
+                    <p th:if="${activeTab == 'followers'}">Non hai ancora follower.</p>
+                </div>
+
+                <div th:each="user : ${profileUsers}" class="user-row profile-user-row">
+                    <img class="avatar avatar-xs"
+                         th:src="${user.profileImagePath != null and user.profileImagePath != '' ? user.profileImagePath : '/img/default-avatar.svg'}"
+                         alt="Avatar utente">
+                    <div class="user-info">
+                        <strong th:text="${user.username}"></strong>
+                        <small th:text="${user.email}"></small>
+                    </div>
+
+                    <form th:if="${activeTab == 'following'}"
+                          th:action="@{/unfollow/{id}(id=${user.id})}"
+                          method="post"
+                          class="user-action">
+                        <input type="hidden" name="returnTo" value="/profile?tab=following">
+                        <button type="submit" class="btn btn-small btn-unfollow">Smetti</button>
+                    </form>
+
+                    <form th:if="${activeTab == 'followers' and !followingIds.contains(user.id)}"
+                          th:action="@{/follow/{id}(id=${user.id})}"
+                          method="post"
+                          class="user-action">
+                        <input type="hidden" name="returnTo" value="/profile?tab=followers">
+                        <button type="submit" class="btn btn-small btn-follow">Segui</button>
+                    </form>
+
+                    <form th:if="${activeTab == 'followers' and followingIds.contains(user.id)}"
+                          th:action="@{/unfollow/{id}(id=${user.id})}"
+                          method="post"
+                          class="user-action">
+                        <input type="hidden" name="returnTo" value="/profile?tab=followers">
+                        <button type="submit" class="btn btn-small btn-unfollow">Smetti</button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="feed-card profile-messages-card">
+                <header class="section-title-row">
+                    <h2>I miei messaggi</h2>
+                    <span th:text="${publishedMessagesCount} + ' pubblicati'"></span>
+                </header>
+
+                <div th:if="${#lists.isEmpty(ownMessages)}" class="empty-state compact-empty">
+                    <p>Non hai ancora pubblicato messaggi.</p>
+                </div>
+
+                <article th:each="msg : ${ownMessages}" class="tweet-card">
+                    <img class="avatar avatar-sm"
+                         th:src="${loggedInUser.profileImagePath != null and loggedInUser.profileImagePath != '' ? loggedInUser.profileImagePath : '/img/default-avatar.svg'}"
+                         alt="Avatar autore">
+                    <div class="tweet-body">
+                        <div class="tweet-topline">
+                            <div>
+                                <strong th:text="${loggedInUser.username}"></strong>
+                                <span class="tweet-date" th:text="${#temporals.format(msg.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                            </div>
+                            <form th:action="@{/messages/delete/{id}(id=${msg.id})}" method="post" class="inline-form">
+                                <input type="hidden" name="returnTo" value="/profile">
+                                <button type="submit"
+                                        class="btn btn-small btn-danger btn-ghost-danger"
+                                        onclick="return confirm('Vuoi eliminare questo messaggio?')">
+                                    Elimina
+                                </button>
+                            </form>
+                        </div>
+                        <p class="tweet-content" th:text="${msg.content}"></p>
+                        <div class="tweet-meta">
+                            <span th:if="${msg.hashtag != null}" th:text="'#' + ${msg.hashtag.name}"></span>
+                            <span th:text="${msg.channel}"></span>
+                        </div>
+                    </div>
+                </article>
+            </section>
+        </main>
+
+        <aside class="right-panel profile-tools-panel">
+            <section class="card">
+                <h2>Immagine profilo</h2>
+                <form th:action="@{/profile/avatar}" method="post" enctype="multipart/form-data" class="avatar-upload-form">
+                    <div class="avatar-upload-preview">
+                        <img class="avatar avatar-lg"
+                             th:src="${loggedInUser.profileImagePath != null and loggedInUser.profileImagePath != '' ? loggedInUser.profileImagePath : '/img/default-avatar.svg'}"
+                             alt="Immagine profilo attuale">
+                    </div>
+                    <input type="file" id="avatar" name="avatar" class="file-input-hidden" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" required>
+                    <label for="avatar" class="btn btn-primary full-width file-trigger">Cambia immagine profilo</label>
+                    <button type="submit" class="btn btn-secondary full-width upload-submit">Salva immagine</button>
+                </form>
+            </section>
+
+            <section class="card">
+                <details class="password-details">
+                    <summary>Change password</summary>
+                    <form th:action="@{/profile/change-password}" method="post" th:object="${changePasswordForm}" class="password-form">
+                        <div class="form-group">
+                            <label for="currentPassword">Password attuale</label>
+                            <input type="password" id="currentPassword" th:field="*{currentPassword}" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">Nuova password</label>
+                            <input type="password" id="newPassword" th:field="*{newPassword}" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Conferma nuova password</label>
+                            <input type="password" id="confirmPassword" th:field="*{confirmPassword}" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-secondary full-width">Salva password</button>
+                    </form>
+                </details>
+            </section>
+        </aside>
+    </div>
+
+    <div id="logoutModal" class="logout-modal" aria-hidden="true">
+        <div class="logout-modal-card" role="dialog" aria-modal="true" aria-labelledby="logoutTitle">
+            <h2 id="logoutTitle">Sei sicuro di voler uscire?</h2>
+            <div class="logout-modal-actions">
+                <a th:href="@{/logout}" class="btn btn-danger">Sì</a>
+                <button type="button" class="btn btn-secondary" data-logout-cancel>No</button>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/app-ui.js}"></script>
+</body>
+</html>

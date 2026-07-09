@@ -1,0 +1,1082 @@
+/* ========================================
+   Twitter App BuonoRiccitiello - UI professionale stile Twitter/X
+   ======================================== */
+
+:root {
+    --primary-color: #1d9bf0;
+    --primary-dark: #1686d9;
+    --danger-color: #f04438;
+    --danger-dark: #d92d20;
+    --success-color: #12b76a;
+    --warning-color: #f79009;
+    --text-color: #0f1419;
+    --text-muted: #536471;
+    --border-color: #eff3f4;
+    --border-strong: #d0d7de;
+    --bg-color: #ffffff;
+    --soft-bg: #f7f9f9;
+    --shadow-soft: 0 2px 12px rgba(15, 20, 25, 0.08);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.45;
+}
+
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* ========================================
+   Layout principale stile Twitter
+   ======================================== */
+
+.twitter-layout {
+    background: #ffffff;
+}
+
+.app-shell {
+    width: min(1280px, 100%);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 300px minmax(0, 620px) 360px;
+    min-height: 100vh;
+}
+
+.left-nav {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    border-right: 1px solid var(--border-color);
+    padding: 18px 18px 20px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: #fff;
+    z-index: 10;
+}
+
+.brand-link {
+    width: fit-content;
+    min-height: 54px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 8px 14px 8px 8px;
+    margin-bottom: 20px;
+}
+
+.brand-link:hover {
+    background: var(--soft-bg);
+    text-decoration: none;
+}
+
+.brand-logo,
+.navbar-logo {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+
+.brand-text {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--text-color);
+    letter-spacing: -0.02em;
+}
+
+.main-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    width: fit-content;
+    color: var(--text-color);
+    padding: 12px 18px;
+    border-radius: 999px;
+    font-size: 22px;
+    font-weight: 500;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.nav-item:hover {
+    background: var(--soft-bg);
+    text-decoration: none;
+}
+
+.nav-item.active {
+    font-weight: 800;
+}
+
+.nav-icon {
+    width: 30px;
+    display: inline-flex;
+    justify-content: center;
+    font-size: 25px;
+    line-height: 1;
+}
+
+.nav-logout {
+    color: var(--danger-color);
+}
+
+.left-account-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 999px;
+    transition: background 0.15s ease;
+}
+
+.left-account-card:hover {
+    background: var(--soft-bg);
+}
+
+.account-text {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.account-text strong,
+.user-info strong {
+    overflow-wrap: anywhere;
+}
+
+.account-text small,
+.user-info small {
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+}
+
+.account-more {
+    margin-left: auto;
+    color: var(--text-color);
+    font-weight: 800;
+}
+
+.feed-column {
+    min-width: 0;
+    border-right: 1px solid var(--border-color);
+    background: #fff;
+}
+
+.feed-header {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    padding: 16px 22px;
+}
+
+.feed-header h1 {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 4px;
+}
+
+.feed-header p {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.right-panel {
+    min-width: 0;
+    padding: 18px 18px 40px 28px;
+    background: #fff;
+}
+
+.card,
+.feed-card,
+.profile-hero {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    box-shadow: none;
+}
+
+.card {
+    padding: 22px;
+    margin-bottom: 18px;
+}
+
+.card h2,
+.feed-card h2 {
+    font-size: 22px;
+    line-height: 1.2;
+    margin-bottom: 16px;
+}
+
+.feed-card {
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+}
+
+/* ========================================
+   Avatar e immagini profilo
+   ======================================== */
+
+.avatar {
+    display: block;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--soft-bg);
+    border: 1px solid var(--border-color);
+    flex: 0 0 auto;
+}
+
+.avatar-xs {
+    width: 40px;
+    height: 40px;
+}
+
+.avatar-sm {
+    width: 48px;
+    height: 48px;
+}
+
+.avatar-md {
+    width: 54px;
+    height: 54px;
+}
+
+.avatar-lg {
+    width: 96px;
+    height: 96px;
+}
+
+/* ========================================
+   Messaggi / Feed
+   ======================================== */
+
+.tweet-card {
+    display: flex;
+    gap: 14px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tweet-card:hover {
+    background: #fafafa;
+}
+
+.tweet-body {
+    min-width: 0;
+    width: 100%;
+}
+
+.tweet-topline {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.tweet-topline strong {
+    font-size: 16px;
+    overflow-wrap: anywhere;
+}
+
+.tweet-date {
+    color: var(--text-muted);
+    margin-left: 8px;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.tweet-content,
+.message-content {
+    font-size: 16px;
+    color: var(--text-color);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
+}
+
+.tweet-meta {
+    margin-top: 10px;
+    display: flex;
+    gap: 14px;
+    color: var(--primary-color);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.empty-state {
+    padding: 46px 24px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.empty-state h2 {
+    color: var(--text-color);
+}
+
+.compact-empty {
+    padding: 20px;
+}
+
+/* ========================================
+   Form pubblicazione messaggio
+   ======================================== */
+
+.compose-card {
+    border-radius: 22px;
+}
+
+.compose-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.compose-textarea {
+    width: 100%;
+    min-height: 110px;
+    resize: vertical;
+    border: 1px solid #e6ecf0;
+    border-radius: 16px;
+    padding: 12px 14px;
+    outline: none;
+    font-size: 18px;
+    line-height: 1.45;
+    color: var(--text-color);
+    background: #fbfdff;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.compose-textarea::placeholder {
+    color: #7f8f9d;
+}
+
+.compose-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 14px;
+    margin-top: 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.compact-select {
+    max-width: 130px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group.compact {
+    margin-top: 14px;
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 7px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    font-size: 15px;
+    background: #fff;
+    color: var(--text-color);
+    outline: none;
+}
+
+.form-control:focus,
+.compose-textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(29, 155, 240, 0.12);
+}
+
+.hint-text {
+    display: block;
+    margin-top: 6px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.error-text {
+    color: var(--danger-color);
+    font-size: 13px;
+    margin-top: 6px;
+    display: block;
+}
+
+/* ========================================
+   Utenti suggeriti / liste follower
+   ======================================== */
+
+.user-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.user-row:last-child {
+    border-bottom: 0;
+}
+
+.user-info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.user-action {
+    flex: 0 0 auto;
+}
+
+/* ========================================
+   Profilo separato
+   ======================================== */
+
+.profile-main {
+    padding-bottom: 40px;
+}
+
+.profile-hero {
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+    overflow: hidden;
+}
+
+.profile-cover {
+    height: 170px;
+    background: linear-gradient(135deg, #1d9bf0 0%, #77c7ff 55%, #e8f5fd 100%);
+}
+
+.profile-summary {
+    display: flex;
+    gap: 18px;
+    align-items: flex-end;
+    padding: 0 22px 16px;
+    margin-top: -52px;
+}
+
+.profile-hero-avatar {
+    width: 112px;
+    height: 112px;
+    border: 4px solid #fff;
+    background: #fff;
+}
+
+.profile-main-text h1 {
+    font-size: 28px;
+    font-weight: 900;
+    margin-bottom: 2px;
+    overflow-wrap: anywhere;
+}
+
+.profile-main-text p {
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+}
+
+.profile-stats-row {
+    display: flex;
+    gap: 18px;
+    padding: 0 22px 20px;
+    color: var(--text-muted);
+}
+
+.profile-stats-row div,
+.profile-stats-row a {
+    color: var(--text-muted);
+    padding: 8px 10px;
+    border-radius: 999px;
+}
+
+.profile-stats-row a:hover,
+.selected-stat {
+    background: var(--soft-bg);
+    text-decoration: none;
+}
+
+.profile-stats-row strong {
+    color: var(--text-color);
+    margin-right: 4px;
+}
+
+.profile-list-card {
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+    padding: 0;
+}
+
+.tab-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tab-header a {
+    text-align: center;
+    color: var(--text-muted);
+    font-weight: 800;
+    padding: 16px 12px;
+    position: relative;
+}
+
+.tab-header a:hover {
+    background: var(--soft-bg);
+    text-decoration: none;
+}
+
+.tab-header .active-tab {
+    color: var(--text-color);
+}
+
+.tab-header .active-tab::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: 64px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--primary-color);
+}
+
+.profile-user-row {
+    padding: 16px 22px;
+}
+
+.section-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-title-row h2 {
+    margin: 0;
+}
+
+.section-title-row span {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.profile-tools-panel .card {
+    border-radius: 22px;
+}
+
+.avatar-upload-preview {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0 18px;
+}
+
+.password-details summary {
+    cursor: pointer;
+    font-weight: 800;
+    font-size: 20px;
+    list-style: none;
+}
+
+.password-details summary::-webkit-details-marker {
+    display: none;
+}
+
+.password-details summary::after {
+    content: "+";
+    float: right;
+    color: var(--primary-color);
+}
+
+.password-details[open] summary::after {
+    content: "-";
+}
+
+.password-form {
+    margin-top: 18px;
+}
+
+/* ========================================
+   Bottoni
+   ======================================== */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    padding: 10px 18px;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+    text-decoration: none;
+}
+
+.btn:hover {
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+.btn-secondary {
+    background: var(--text-color);
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background: #2f3336;
+}
+
+.btn-danger {
+    background: var(--danger-color);
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background: var(--danger-dark);
+}
+
+.btn-small {
+    padding: 8px 14px;
+    font-size: 13px;
+}
+
+.btn-follow {
+    background: var(--text-color);
+    color: #fff;
+}
+
+.btn-follow:hover {
+    background: #2f3336;
+}
+
+.btn-unfollow {
+    background: #e7edf0;
+    color: var(--text-color);
+}
+
+.btn-unfollow:hover {
+    background: #d8e0e5;
+}
+
+.btn-ghost-danger {
+    background: rgba(240, 68, 56, 0.1);
+    color: var(--danger-color);
+}
+
+.btn-ghost-danger:hover {
+    background: rgba(240, 68, 56, 0.18);
+}
+
+.btn-logout {
+    background: var(--danger-color);
+    color: #fff;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.inline-form {
+    display: inline-flex;
+}
+
+/* ========================================
+   Toast notifiche automatiche
+   ======================================== */
+
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 24px;
+    z-index: 9999;
+    max-width: 360px;
+    padding: 14px 18px;
+    border-radius: 16px;
+    color: #fff;
+    font-weight: 700;
+    box-shadow: var(--shadow-soft);
+    animation: toastIn 0.22s ease-out;
+}
+
+.toast-success {
+    background: var(--success-color);
+}
+
+.toast-error {
+    background: var(--danger-color);
+}
+
+.toast-hide {
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+@keyframes toastIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert {
+    padding: 13px 15px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+.alert-error {
+    background: #fff1f0;
+    color: var(--danger-color);
+    border: 1px solid #ffd2cc;
+}
+
+.alert-success {
+    background: #ecfdf3;
+    color: #027a48;
+    border: 1px solid #abefc6;
+}
+
+.alert-info {
+    background: #eff8ff;
+    color: #175cd3;
+    border: 1px solid #b2ddff;
+}
+
+.text-muted {
+    color: var(--text-muted);
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* ========================================
+   Pagine login / register / admin esistenti
+   ======================================== */
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 22px;
+}
+
+.card-auth {
+    max-width: 430px;
+    margin: 60px auto;
+    padding: 36px;
+    border-radius: 24px;
+    box-shadow: var(--shadow-soft);
+}
+
+.card-auth h1 {
+    font-size: 28px;
+    margin-bottom: 22px;
+}
+
+.auth-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--primary-color);
+    font-size: 22px;
+    font-weight: 900;
+    margin-bottom: 24px;
+}
+
+.auth-logo img {
+    width: 42px;
+    height: 42px;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border-color);
+    background: #fff;
+}
+
+.navbar-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--primary-color);
+    font-size: 22px;
+}
+
+.navbar-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 14px;
+}
+
+.table th,
+.table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+
+.table th {
+    color: var(--text-muted);
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.form-search {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.form-search .form-group {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.form-search .btn {
+    height: 44px;
+    margin-bottom: 0;
+}
+
+.search-results {
+    margin-top: 22px;
+}
+
+
+/* ========================================
+   Upload immagine profilo, login e modale logout
+   ======================================== */
+
+.btn-auth-submit {
+    display: flex;
+    margin: 8px auto 0;
+    min-width: 150px;
+}
+
+.auth-register-link {
+    margin-top: 20px;
+    line-height: 1.7;
+}
+
+.auth-register-link span,
+.auth-register-link a {
+    display: block;
+}
+
+.file-input-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.file-trigger {
+    margin-bottom: 10px;
+}
+
+.upload-submit {
+    margin-top: 0;
+}
+
+.logout-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(15, 20, 25, 0.42);
+    backdrop-filter: blur(5px);
+}
+
+.logout-modal.is-open {
+    display: flex;
+}
+
+.logout-modal-card {
+    width: min(420px, 100%);
+    padding: 28px;
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 24px 80px rgba(15, 20, 25, 0.25);
+    text-align: center;
+    animation: modalIn 0.18s ease-out;
+}
+
+.logout-modal-card h2 {
+    font-size: 23px;
+    line-height: 1.25;
+    margin-bottom: 22px;
+}
+
+.logout-modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ========================================
+   Responsive
+   ======================================== */
+
+@media (max-width: 1180px) {
+    .app-shell {
+        grid-template-columns: 240px minmax(0, 1fr);
+    }
+
+    .right-panel {
+        grid-column: 2;
+        border-right: 1px solid var(--border-color);
+        padding-left: 18px;
+    }
+
+    .feed-column {
+        border-right: 1px solid var(--border-color);
+    }
+}
+
+@media (max-width: 780px) {
+    .app-shell {
+        display: block;
+    }
+
+    .left-nav {
+        position: sticky;
+        top: 0;
+        height: auto;
+        flex-direction: row;
+        align-items: center;
+        padding: 10px 14px;
+        border-right: 0;
+        border-bottom: 1px solid var(--border-color);
+        overflow-x: auto;
+    }
+
+    .brand-link {
+        margin: 0;
+    }
+
+    .main-menu {
+        flex-direction: row;
+    }
+
+    .nav-item {
+        font-size: 0;
+        gap: 0;
+        padding: 10px 12px;
+    }
+
+    .nav-icon {
+        font-size: 23px;
+    }
+
+    .left-account-card {
+        display: none;
+    }
+
+    .feed-column,
+    .right-panel {
+        border-right: 0;
+    }
+
+    .right-panel {
+        padding: 16px;
+    }
+
+    .tweet-date {
+        display: block;
+        margin-left: 0;
+        margin-top: 2px;
+    }
+
+    .form-search {
+        display: block;
+    }
+}

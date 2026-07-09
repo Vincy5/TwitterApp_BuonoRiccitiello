@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter App - Login BuonoRiccitiello</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/img/twitter-logo.svg}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container">
+        <div class="card card-auth">
+            <div class="auth-logo"><img th:src="@{/img/twitter-logo.svg}" alt="Twitter App"><span>Twitter App</span></div>
+            <h1>Login</h1>
+            
+            <!-- Messaggio di errore -->
+            <div th:if="${error}" class="alert alert-error">
+                <p th:text="${error}"></p>
+            </div>
+
+            <!-- Messaggio di successo -->
+            <div th:if="${success}" class="alert alert-success">
+                <p th:text="${success}"></p>
+            </div>
+
+            <!-- Form di login -->
+            <form th:action="@{/login}" method="post" th:object="${loginForm}">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" th:field="*{username}" 
+                           class="form-control" required>
+                    <span th:if="${#fields.hasErrors('username')}" 
+                          class="error-text" th:errors="*{username}"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" th:field="*{password}" 
+                           class="form-control" required>
+                    <span th:if="${#fields.hasErrors('password')}" 
+                          class="error-text" th:errors="*{password}"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-auth-submit">Accedi</button>
+            </form>
+
+            <!-- Link a registrazione -->
+            <p class="text-center auth-register-link">
+                <span>Non hai un account?</span>
+                <a th:href="@{/register}">Registrati qui</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

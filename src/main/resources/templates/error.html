@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter App - Errore BuonoRiccitiello</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/img/twitter-logo.svg}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container">
+        <div class="card card-error">
+            <div class="error-icon">⚠️</div>
+            
+            <h1 th:text="${errorTitle}">Si è verificato un errore</h1>
+            
+            <div class="error-details">
+                <p th:text="${errorMessage}"></p>
+                <small th:if="${errorType}" th:text="'Tipo: ' + ${errorType}"></small>
+            </div>
+
+            <div class="error-actions">
+                <a th:href="@{/home}" class="btn btn-primary">Torna a Home</a>
+                <a th:href="@{/login}" class="btn btn-secondary">Torna a Login</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
