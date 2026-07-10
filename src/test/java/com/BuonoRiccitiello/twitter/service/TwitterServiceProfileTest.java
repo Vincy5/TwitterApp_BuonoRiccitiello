@@ -1,11 +1,14 @@
 package com.BuonoRiccitiello.twitter.service;
 
+import com.BuonoRiccitiello.twitter.observer.FollowersNotificationObserver;
+import com.BuonoRiccitiello.twitter.observer.NotificationPersistenceObserver;
 import com.BuonoRiccitiello.twitter.factory.ChannelFactory;
 import com.BuonoRiccitiello.twitter.model.User;
 import com.BuonoRiccitiello.twitter.observer.LogNotificationObserver;
 import com.BuonoRiccitiello.twitter.observer.UserSubject;
 import com.BuonoRiccitiello.twitter.repository.HashtagRepository;
 import com.BuonoRiccitiello.twitter.repository.MessageRepository;
+import com.BuonoRiccitiello.twitter.repository.NotificationRepository;
 import com.BuonoRiccitiello.twitter.repository.UserRepository;
 import com.BuonoRiccitiello.twitter.storage.AvatarStorage;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +20,7 @@ import org.mockito.MockitoAnnotations;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @DisplayName("TwitterService - profilo e sicurezza")
@@ -48,18 +52,30 @@ class TwitterServiceProfileTest {
     @Mock
     private AvatarStorage avatarStorage;
 
+    @Mock
+    private FollowersNotificationObserver followersNotificationObserver;
+
+    @Mock
+    private NotificationPersistenceObserver notificationPersistenceObserver;
+
+    @Mock
+    private NotificationRepository notificationRepository;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        twitterService = new TwitterService(
-                userRepository,
-                messageRepository,
-                hashtagRepository,
-                authService,
-                channelFactory,
-                userSubject,
-                logNotificationObserver,
-                avatarStorage
+            twitterService = new TwitterService(
+            userRepository,
+            messageRepository,
+            hashtagRepository,
+            authService,
+            channelFactory,
+            userSubject,
+            logNotificationObserver,
+            followersNotificationObserver,
+            notificationPersistenceObserver,
+            avatarStorage,
+            notificationRepository
         );
     }
 

@@ -5,8 +5,10 @@ import com.BuonoRiccitiello.twitter.model.User;
 import com.BuonoRiccitiello.twitter.observer.UserSubject;
 import com.BuonoRiccitiello.twitter.repository.UserRepository;
 import com.BuonoRiccitiello.twitter.repository.MessageRepository;
+import com.BuonoRiccitiello.twitter.repository.NotificationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * Implementazione concreta del pattern Command che elimina un utente dal sistema.
@@ -43,6 +45,7 @@ public class DeleteUserCommand implements AdminCommand {
     private final UserRepository userRepository;
     private final MessageRepository messageRepository;
     private final UserSubject userSubject;
+    private final NotificationRepository notificationRepository;
 
     /**
      * Costruttore del comando.
@@ -51,12 +54,19 @@ public class DeleteUserCommand implements AdminCommand {
      * @param userRepository il repository per accedere ai dati degli utenti
      * @param userSubject il subject per notificare gli observer
      */
-    public DeleteUserCommand(Long userId, UserRepository userRepository, MessageRepository messageRepository, UserSubject userSubject) {
+    public DeleteUserCommand(
+                Long userId,
+                UserRepository userRepository,
+                MessageRepository messageRepository,
+                NotificationRepository notificationRepository,
+                UserSubject userSubject
+        ) {
         this.userId = userId;
         this.userRepository = userRepository;
         this.messageRepository = messageRepository;
+        this.notificationRepository = notificationRepository;
         this.userSubject = userSubject;
-    }
+}
 
     /**
      * Esegue l'eliminazione dell'utente.
@@ -73,36 +83,55 @@ public class DeleteUserCommand implements AdminCommand {
      * @throws UserNotFoundException se l'utente con l'ID specificato non esiste
      */
     @Override
-    public void execute() throws UserNotFoundException {
+        public void execute() throws UserNotFoundException {
         logger.info("Inizio esecuzione comando: DeleteUserCommand per utente ID={}", userId);
 
-        // 1. Ricerca l'utente
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(
                         "Utente con ID " + userId + " non trovato nel sistema."
                 ));
 
-        // 2. Rimuove i messaggi dell'utente per evitare vincoli referenziali
-        logger.debug("Rimozione messaggi dell'utente ID={} prima dell'eliminazione", userId);
-        messageRepository.deleteByAuthor_Id(userId);
+        String username = user.getUsername();
 
-        // 3. Notifica i follower tramite Observer pattern
-        logger.debug("Notificazione in corso ai {} follower dell'utente '{}'",
-                user.getFollowers().size(), user.getUsername());
+        logger.info(
+                "L'utente '{}' ha {} follower da notificare.",
+                username,
+                user.getFollowers().size()
+        );
+
+        /*
+        * 1. Prima notifico i follower.
+        * In questo momento le relazioni followers/following esistono ancora,
+        * quindi l'Observer riesce a capire chi deve ricevere la notifica.
+        */
         userSubject.notifyUserDeleted(user);
 
-        // 4. Prima dell'eliminazione pulizia dalle relazioni ManyToMany
+        /*
+        * 2. Elimino i messaggi pubblicati dall'utente.
+        * Serve perché Message ha author_id collegato a User.
+        */
+        messageRepository.deleteByAuthor_Id(userId);
 
-        user.getFollowers().forEach(follower -> follower.getFollowing().remove(user));
-        user.getFollowing().forEach(followed -> followed.getFollowers().remove(user));
+        /*
+        * 3. Elimino le notifiche ricevute dall'utente che sto eliminando.
+        * Serve perché Notification ha recipient_id collegato a User.
+        */
+        notificationRepository.deleteByRecipient_Id(userId);
 
-        user.getFollowers().clear();
-        user.getFollowing().clear();
+        /*
+        * 4. Elimino tutte le relazioni follower/following dalla tabella ponte.
+        */
+        userRepository.deleteAllFollowRelationsForUser(userId);
 
-        userRepository.delete(user);
+        /*
+        * 5. Solo alla fine elimino l'utente.
+        */
+        userRepository.deleteById(userId);
 
-        // 4. Log dell'operazione completata
-        logger.info("Utente '{}' (ID={}) eliminato con successo dal sistema", 
-                user.getUsername(), userId);
-    }
+        logger.info(
+                "Utente '{}' (ID={}) eliminato con successo dal sistema",
+                username,
+                userId
+        );
+        }
 }

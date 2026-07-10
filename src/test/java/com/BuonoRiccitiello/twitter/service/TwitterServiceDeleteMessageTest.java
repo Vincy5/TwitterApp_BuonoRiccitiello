@@ -1,5 +1,7 @@
 package com.BuonoRiccitiello.twitter.service;
 
+import com.BuonoRiccitiello.twitter.observer.FollowersNotificationObserver;
+import com.BuonoRiccitiello.twitter.observer.NotificationPersistenceObserver;
 import com.BuonoRiccitiello.twitter.factory.ChannelFactory;
 import com.BuonoRiccitiello.twitter.model.Message;
 import com.BuonoRiccitiello.twitter.model.User;
@@ -9,6 +11,7 @@ import com.BuonoRiccitiello.twitter.repository.HashtagRepository;
 import com.BuonoRiccitiello.twitter.repository.MessageRepository;
 import com.BuonoRiccitiello.twitter.repository.UserRepository;
 import com.BuonoRiccitiello.twitter.storage.AvatarStorage;
+import com.BuonoRiccitiello.twitter.repository.NotificationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,6 +21,7 @@ import org.mockito.MockitoAnnotations;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @DisplayName("TwitterService - eliminazione messaggi")
@@ -49,19 +53,30 @@ class TwitterServiceDeleteMessageTest {
     @Mock
     private AvatarStorage avatarStorage;
 
+    @Mock
+    private FollowersNotificationObserver followersNotificationObserver;
+
+    @Mock
+    private NotificationPersistenceObserver notificationPersistenceObserver;
+
+    @Mock
+    private NotificationRepository notificationRepository;
+
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
         twitterService = new TwitterService(
-                userRepository,
-                messageRepository,
-                hashtagRepository,
-                authService,
-                channelFactory,
-                userSubject,
-                logNotificationObserver,
-                avatarStorage
-        );
+        userRepository,
+        messageRepository,
+        hashtagRepository,
+        authService,
+        channelFactory,
+        userSubject,
+        logNotificationObserver,
+        followersNotificationObserver,
+        notificationPersistenceObserver,
+        avatarStorage,
+        notificationRepository
+    );
     }
 
     @Test

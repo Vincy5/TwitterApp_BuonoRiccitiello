@@ -18,6 +18,7 @@ import com.BuonoRiccitiello.twitter.observer.UserSubject;
 import com.BuonoRiccitiello.twitter.repository.HashtagRepository;
 import com.BuonoRiccitiello.twitter.repository.MessageRepository;
 import com.BuonoRiccitiello.twitter.repository.UserRepository;
+import com.BuonoRiccitiello.twitter.repository.NotificationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 
 /**
  * Servizio principale per l'orchestrazione della logica di business dell'applicazione Twitter.
@@ -74,6 +76,8 @@ public class TwitterService {
     private final FollowersNotificationObserver followersNotificationObserver;
     private final NotificationPersistenceObserver notificationPersistenceObserver;
     private final AvatarStorage avatarStorage;
+    private final NotificationRepository notificationRepository;
+    
 
     /**
      * Costruttore con dependency injection.
@@ -88,7 +92,8 @@ public class TwitterService {
             LogNotificationObserver logNotificationObserver,
             FollowersNotificationObserver followersNotificationObserver,
             NotificationPersistenceObserver notificationPersistenceObserver,
-            AvatarStorage avatarStorage
+            AvatarStorage avatarStorage,
+            NotificationRepository notificationRepository
     ) {
         this.userRepository = userRepository;
         this.messageRepository = messageRepository;
@@ -103,6 +108,7 @@ public class TwitterService {
         this.userSubject.attach(this.logNotificationObserver);
         this.userSubject.attach(this.followersNotificationObserver);
         this.userSubject.attach(this.notificationPersistenceObserver);
+        this.notificationRepository = notificationRepository;
     }
 
     /**
@@ -494,6 +500,7 @@ public class TwitterService {
                 userId,
                 userRepository,
                 messageRepository,
+                notificationRepository,
                 userSubject
         );
 

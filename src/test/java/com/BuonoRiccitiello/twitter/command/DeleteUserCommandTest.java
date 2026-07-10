@@ -4,6 +4,7 @@ import com.BuonoRiccitiello.twitter.exception.UserNotFoundException;
 import com.BuonoRiccitiello.twitter.model.User;
 import com.BuonoRiccitiello.twitter.observer.UserSubject;
 import com.BuonoRiccitiello.twitter.repository.UserRepository;
+import com.BuonoRiccitiello.twitter.repository.NotificationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -13,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -40,6 +42,9 @@ class DeleteUserCommandTest {
     @Mock
     private com.BuonoRiccitiello.twitter.repository.MessageRepository messageRepository;
 
+    @Mock
+    private NotificationRepository notificationRepository;
+
     private DeleteUserCommand deleteUserCommand;
     private User testUser;
 
@@ -55,7 +60,7 @@ class DeleteUserCommandTest {
     void testDeleteUserSuccessfully() {
         // Arrange
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        deleteUserCommand = new DeleteUserCommand(1L, userRepository, messageRepository, userSubject);
+        deleteUserCommand = new DeleteUserCommand(1L, userRepository, messageRepository, notificationRepository, userSubject);
 
         // Act
         deleteUserCommand.execute();
@@ -69,7 +74,7 @@ class DeleteUserCommandTest {
     void testNotifyFollowersOnUserDeletion() {
         // Arrange
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        deleteUserCommand = new DeleteUserCommand(1L, userRepository, messageRepository, userSubject);
+        deleteUserCommand = new DeleteUserCommand(1L, userRepository, messageRepository, notificationRepository, userSubject);
 
         // Act
         deleteUserCommand.execute();
@@ -83,7 +88,7 @@ class DeleteUserCommandTest {
     void testThrowExceptionIfUserNotFound() {
         // Arrange
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
-        deleteUserCommand = new DeleteUserCommand(999L, userRepository, messageRepository, userSubject);
+        deleteUserCommand = new DeleteUserCommand(999L, userRepository, messageRepository, notificationRepository, userSubject);
 
         // Act & Assert
         assertThrows(UserNotFoundException.class, () ->
@@ -99,7 +104,7 @@ class DeleteUserCommandTest {
     void testDoNotNotifyIfUserNotFound() {
         // Arrange
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
-        deleteUserCommand = new DeleteUserCommand(999L, userRepository, messageRepository, userSubject);
+        deleteUserCommand = new DeleteUserCommand(999L, userRepository, messageRepository, notificationRepository, userSubject);
 
         // Act & Assert
         assertThrows(UserNotFoundException.class, () ->
@@ -115,7 +120,7 @@ class DeleteUserCommandTest {
     void testNotificationBeforeDeletion() {
         // Arrange
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        deleteUserCommand = new DeleteUserCommand(1L, userRepository, messageRepository, userSubject);
+        deleteUserCommand = new DeleteUserCommand(1L, userRepository, messageRepository, notificationRepository, userSubject);
 
         // Act
         deleteUserCommand.execute();

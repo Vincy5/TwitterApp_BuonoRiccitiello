@@ -33,21 +33,36 @@ public class NotificationPersistenceObserver implements MessageObserver {
 
     @Override
     public void onUserDeleted(User deletedUser) {
-        if (deletedUser == null) return;
+        if (deletedUser == null || deletedUser.getFollowers() == null) {
+            return;
+        }
+
+        String deletedUsername = deletedUser.getUsername();
 
         for (User follower : deletedUser.getFollowers()) {
-            String text = String.format("L'utente '%s' che seguivi è stato eliminato dal sistema.", deletedUser.getUsername());
-            // Ensure we attach a managed reference as recipient to avoid TransientObjectException
+            if (follower == null || follower.getId() == null) {
+                continue;
+            }
+
+            String text = String.format(
+                    "L'utente '%s' che seguivi è stato eliminato dal sistema.",
+                    deletedUsername
+            );
+
             User recipientRef = userRepository.getReferenceById(follower.getId());
 
-            Notification n = Notification.builder()
-                    .recipient(recipientRef)
-                    .message(text)
-                    .read(false)
-                    .build();
+            Notification notification = new Notification();
+            notification.setRecipient(recipientRef);
+            notification.setMessage(text);
+            notification.setRead(false);
 
-            notificationRepository.save(n);
-            logger.debug("Notifica salvata per follower '{}' (recipient id={})", follower.getUsername(), follower.getId());
+            notificationRepository.save(notification);
+
+            logger.info(
+                    "Notifica salvata per '{}' perché seguiva '{}'",
+                    follower.getUsername(),
+                    deletedUsername
+            );
         }
     }
 }

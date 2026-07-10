@@ -1,34 +1,119 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="it">
 <head>
-    <meta charset="UTF-8" />
-    <title>Le mie notifiche</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-        .notification { padding:10px; border-bottom:1px solid #e0e0e0 }
-        .notification .meta { font-size:0.85em; color:#666 }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifiche - Twitter App</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/img/twitter-logo.svg}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
-<body>
-<div class="container">
-    <header>
-        <h1>Notifiche</h1>
-        <a th:href="@{/home}">Home</a> |
-        <a th:href="@{/profile}">Profilo</a>
-    </header>
+<body class="twitter-layout">
 
-    <section>
-        <div th:if="${notifications.isEmpty()}">
-            <p>Non ci sono notifiche.</p>
-        </div>
+<div class="app-shell">
 
-        <div th:each="n : ${notifications}" class="notification">
-            <div th:text="${n.message}"></div>
-            <div class="meta" th:text="${#dates.format(n.createdAt, 'dd/MM/yyyy HH:mm')}"></div>
+    <aside class="left-nav">
+        <a th:href="@{/home}" class="brand-link" aria-label="Twitter App">
+            <img th:src="@{/img/twitter-logo.svg}" alt="Twitter App" class="brand-logo">
+            <span class="brand-text">Twitter App</span>
+        </a>
+
+        <nav class="main-menu">
+            <a th:href="@{/home}" class="nav-item">
+                <span class="nav-icon">⌂</span>
+                <span>Home</span>
+            </a>
+
+            <a th:href="@{/profile}" class="nav-item">
+                <span class="nav-icon">◉</span>
+                <span>Profilo</span>
+            </a>
+
+            <a th:href="@{/notifications}" class="nav-item active">
+                <span class="nav-icon">🔔</span>
+                <span>Notifiche</span>
+            </a>
+
+            <a th:if="${loggedInUser.role.name() == 'ADMIN'}"
+               th:href="@{/admin}"
+               class="nav-item">
+                <span class="nav-icon">⚙</span>
+                <span>Admin</span>
+            </a>
+
+            <a href="#" class="nav-item nav-logout" data-logout-open>
+                <span class="nav-icon">⇢</span>
+                <span>Esci</span>
+            </a>
+        </nav>
+
+        <div class="left-account-card">
+            <img class="avatar avatar-md"
+                 th:src="${loggedInUser.profileImagePath != null and loggedInUser.profileImagePath != '' ? loggedInUser.profileImagePath : '/img/default-avatar.svg'}"
+                 alt="Immagine profilo">
+
+            <div class="account-text">
+                <strong th:text="${loggedInUser.username}">username</strong>
+                <small th:text="${loggedInUser.email}">email</small>
+            </div>
+
+            <a th:href="@{/profile}" class="account-more" title="Apri profilo">•••</a>
         </div>
-    </section>
+    </aside>
+
+    <main class="feed-column">
+        <header class="feed-header">
+            <h1>Notifiche</h1>
+            <p>Qui trovi le comunicazioni relative agli utenti che segui.</p>
+        </header>
+
+        <section class="feed-card">
+            <div th:if="${#lists.isEmpty(notifications)}" class="empty-state">
+                <h2>Nessuna notifica</h2>
+                <p>Quando un utente che segui viene eliminato, la comunicazione apparirà qui.</p>
+            </div>
+
+            <article th:each="notification : ${notifications}" class="tweet-card notification-card">
+                <div class="notification-round-icon">🔔</div>
+
+                <div class="tweet-body">
+                    <div class="tweet-topline">
+                        <strong>Comunicazione di sistema</strong>
+                        <span class="tweet-date"
+                              th:text="${#temporals.format(notification.createdAt, 'dd/MM/yyyy HH:mm')}">
+                            data
+                        </span>
+                    </div>
+
+                    <p class="tweet-content" th:text="${notification.message}">
+                        Testo notifica
+                    </p>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <aside class="right-panel">
+        <section class="card">
+            <h2>Info notifiche</h2>
+            <p class="text-muted">
+                Le notifiche vengono generate tramite Observer Pattern quando un utente seguito viene eliminato dal sistema.
+            </p>
+        </section>
+    </aside>
+
 </div>
+
+<div id="logoutModal" class="logout-modal" aria-hidden="true">
+    <div class="logout-modal-card" role="dialog" aria-modal="true" aria-labelledby="logoutTitle">
+        <h2 id="logoutTitle">Sei sicuro di voler uscire?</h2>
+
+        <div class="logout-modal-actions">
+            <a th:href="@{/logout}" class="btn btn-danger">Sì</a>
+            <button type="button" class="btn btn-secondary" data-logout-cancel>No</button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/app-ui.js}"></script>
 </body>
 </html>
-
