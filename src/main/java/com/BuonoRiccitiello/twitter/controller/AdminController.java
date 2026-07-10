@@ -83,11 +83,12 @@ public class AdminController {
      * @param model il modello per passare dati al template
      * @return redirect a /admin
      */
-    @PostMapping("/delete/{id}")
+    @DeleteMapping("/delete/{id}")
     public String deleteUser(
             @PathVariable("id") Long userId,
             HttpSession session,
-            Model model
+            Model model,
+            org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes
     ) {
         // Verifica che l'utente sia loggato e admin
         User loggedInUser = (User) session.getAttribute("loggedInUser");
@@ -102,11 +103,11 @@ public class AdminController {
         try {
             // Elimina l'utente
             twitterService.adminDeleteUser(userId);
-            model.addAttribute("success", "Utente eliminato con successo");
+            redirectAttributes.addFlashAttribute("success", "Utente eliminato con successo");
         } catch (UserNotFoundException e) {
-            model.addAttribute("error", "Utente non trovato: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Utente non trovato: " + e.getMessage());
         } catch (Exception e) {
-            model.addAttribute("error", "Errore durante l'eliminazione: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Errore durante l'eliminazione: " + e.getMessage());
         }
 
         return "redirect:/admin";

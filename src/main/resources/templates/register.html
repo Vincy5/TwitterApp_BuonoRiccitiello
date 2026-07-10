@@ -6,6 +6,7 @@
     <title>Twitter App - Registrazione BuonoRiccitiello</title>
     <link rel="icon" type="image/svg+xml" th:href="@{/img/twitter-logo.svg}">
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
@@ -52,7 +53,7 @@
                           class="error-text" th:errors="*{passwordConfirm}"></span>
                 </div>
 
-                <button type="submit" class="btn btn-primary">Registrati</button>
+                <button type="submit" class="btn btn-primary btn-auth-submit">Registrati</button>
             </form>
 
             <!-- Link a login -->

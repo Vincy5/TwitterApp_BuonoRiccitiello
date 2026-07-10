@@ -6,6 +6,7 @@
     <title>Twitter App - Admin BuonoRiccitiello</title>
     <link rel="icon" type="image/svg+xml" th:href="@{/img/twitter-logo.svg}">
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="navbar">
@@ -57,9 +58,10 @@
                         <td th:text="${user.role}"></td>
                         <td>
                             <form th:action="@{/admin/delete/{id}(id=${user.id})}" method="post" class="inline-form">
-                                <button type="submit" class="btn btn-small btn-danger" 
+                                <input type="hidden" name="_method" value="delete" />
+                                <button type="submit" class="btn btn-small btn-danger"
                                         onclick="return confirm('Sei sicuro di voler eliminare questo utente?')">
-                                    Elimina
+                                    <i class="fas fa-trash"></i> Elimina
                                 </button>
                             </form>
                         </td>

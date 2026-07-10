@@ -54,5 +54,13 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
      * @return numero di messaggi pubblicati dall'autore
      */
     long countByAuthor_Id(Long authorId);
+
+    /**
+     * Elimina tutti i messaggi pubblicati da un autore specifico.
+     * Utile per rimuovere dipendenze prima di eliminare l'utente.
+     *
+     * @param authorId identificativo dell'autore
+     */
+    void deleteByAuthor_Id(Long authorId);
 }
 

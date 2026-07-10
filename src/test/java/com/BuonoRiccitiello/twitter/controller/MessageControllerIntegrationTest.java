@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
@@ -31,9 +31,10 @@ import static org.mockito.Mockito.*;
  *   <li>POST /messages salva il messaggio nel database (via MockMvc)</li>
  * </ul>
  */
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(controllers = com.BuonoRiccitiello.twitter.controller.UserController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @DisplayName("Message Controller Integration Tests")
+@SuppressWarnings("deprecation")
 class MessageControllerIntegrationTest {
 
     @Autowired
@@ -66,6 +67,17 @@ class MessageControllerIntegrationTest {
         // Setup della sessione
         session = new MockHttpSession();
         session.setAttribute("loggedInUser", testUser);
+
+        // Mock del metodo getUserById per restituire l'utente di test
+        when(twitterService.getUserById(1L)).thenReturn(testUser);
+        
+        // Mock dei metodi necessari per populateHomeModel
+        when(twitterService.getAllUsers()).thenReturn(java.util.List.of(testUser));
+        when(twitterService.getFollowingIds(1L)).thenReturn(java.util.Set.of());
+        when(twitterService.getFeedMessages(1L)).thenReturn(java.util.List.of(testMessage));
+        when(twitterService.getFollowingCount(1L)).thenReturn(0);
+        when(twitterService.getFollowersCount(1L)).thenReturn(0);
+        when(twitterService.getPublishedMessagesCount(1L)).thenReturn(1L);
     }
 
     @Test
@@ -118,6 +130,7 @@ class MessageControllerIntegrationTest {
         mockMvc.perform(post("/messages")
                         .session(session)
                         .param("content", "")
+                        .param("hashtag", "")
                         .param("channel", "WEB"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("home"));
@@ -156,6 +169,16 @@ class MessageControllerIntegrationTest {
         for (Channel channel : channels) {
             // Reset del mock
             reset(twitterService);
+            
+             // Riconfigura i mock dopo il reset
+             when(twitterService.getUserById(1L)).thenReturn(testUser);
+             when(twitterService.getAllUsers()).thenReturn(java.util.List.of(testUser));
+             when(twitterService.getFollowingIds(1L)).thenReturn(java.util.Set.of());
+             when(twitterService.getFeedMessages(1L)).thenReturn(java.util.List.of(testMessage));
+             when(twitterService.getFollowingCount(1L)).thenReturn(0);
+             when(twitterService.getFollowersCount(1L)).thenReturn(0);
+             when(twitterService.getPublishedMessagesCount(1L)).thenReturn(1L);
+            
             when(twitterService.postMessage(
                     eq(1L),
                     eq("Test message"),

@@ -12,6 +12,8 @@ import com.BuonoRiccitiello.twitter.model.Hashtag;
 import com.BuonoRiccitiello.twitter.model.Message;
 import com.BuonoRiccitiello.twitter.model.User;
 import com.BuonoRiccitiello.twitter.observer.LogNotificationObserver;
+import com.BuonoRiccitiello.twitter.observer.FollowersNotificationObserver;
+import com.BuonoRiccitiello.twitter.observer.NotificationPersistenceObserver;
 import com.BuonoRiccitiello.twitter.observer.UserSubject;
 import com.BuonoRiccitiello.twitter.repository.HashtagRepository;
 import com.BuonoRiccitiello.twitter.repository.MessageRepository;
@@ -23,10 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import com.BuonoRiccitiello.twitter.storage.AvatarStorage;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ArrayList;
@@ -72,6 +71,9 @@ public class TwitterService {
     private final ChannelFactory channelFactory;
     private final UserSubject userSubject;
     private final LogNotificationObserver logNotificationObserver;
+    private final FollowersNotificationObserver followersNotificationObserver;
+    private final NotificationPersistenceObserver notificationPersistenceObserver;
+    private final AvatarStorage avatarStorage;
 
     /**
      * Costruttore con dependency injection.
@@ -83,7 +85,10 @@ public class TwitterService {
             AuthService authService,
             ChannelFactory channelFactory,
             UserSubject userSubject,
-            LogNotificationObserver logNotificationObserver
+            LogNotificationObserver logNotificationObserver,
+            FollowersNotificationObserver followersNotificationObserver,
+            NotificationPersistenceObserver notificationPersistenceObserver,
+            AvatarStorage avatarStorage
     ) {
         this.userRepository = userRepository;
         this.messageRepository = messageRepository;
@@ -92,6 +97,12 @@ public class TwitterService {
         this.channelFactory = channelFactory;
         this.userSubject = userSubject;
         this.logNotificationObserver = logNotificationObserver;
+        this.followersNotificationObserver = followersNotificationObserver;
+        this.notificationPersistenceObserver = notificationPersistenceObserver;
+        this.avatarStorage = avatarStorage;
+        this.userSubject.attach(this.logNotificationObserver);
+        this.userSubject.attach(this.followersNotificationObserver);
+        this.userSubject.attach(this.notificationPersistenceObserver);
     }
 
     /**
@@ -139,8 +150,9 @@ public class TwitterService {
         user = userRepository.save(user);
         logger.info("Utente '{}' registrato con successo (ID={})", user.getUsername(), user.getId());
 
-        // Registra l'observer
-        userSubject.attach(logNotificationObserver);
+        // Gli observer vengono ora registrati nel costruttore del service
+        // in modo che siano attivi anche per gli utenti già presenti nel DB.
+        userSubject.attach(notificationPersistenceObserver);
 
         return user;
     }
@@ -366,40 +378,10 @@ public class TwitterService {
      */
     @Transactional
     public void updateProfileImage(Long userId, MultipartFile avatar) {
-        if (avatar == null || avatar.isEmpty()) {
-            throw new IllegalArgumentException("Seleziona un'immagine da caricare.");
-        }
-
-        String contentType = avatar.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new IllegalArgumentException("Il file caricato deve essere un'immagine.");
-        }
-
-        if (avatar.getSize() > 2 * 1024 * 1024) {
-            throw new IllegalArgumentException("Dimensione immagine eccessiva. Max 2 MB.");
-        }
-
         User user = getUserById(userId);
-
-        String originalFilename = avatar.getOriginalFilename();
-        String extension = ".png";
-        if (originalFilename != null && originalFilename.contains(".")) {
-            extension = originalFilename.substring(originalFilename.lastIndexOf('.')).toLowerCase();
-        }
-
-        if (!extension.matches("\\.(png|jpg|jpeg|gif|webp)")) {
-            extension = ".png";
-        }
-
         try {
-            Path uploadDir = Paths.get("uploads", "avatars");
-            Files.createDirectories(uploadDir);
-
-            String filename = "user-" + userId + extension;
-            Path destination = uploadDir.resolve(filename);
-            Files.copy(avatar.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
-
-            user.setProfileImagePath("/uploads/avatars/" + filename);
+            String publicPath = avatarStorage.storeAvatar(userId, avatar);
+            user.setProfileImagePath(publicPath);
             userRepository.save(user);
             logger.info("Immagine profilo aggiornata per l'utente '{}'", user.getUsername());
         } catch (IOException e) {
@@ -511,6 +493,7 @@ public class TwitterService {
         DeleteUserCommand deleteCommand = new DeleteUserCommand(
                 userId,
                 userRepository,
+                messageRepository,
                 userSubject
         );
 

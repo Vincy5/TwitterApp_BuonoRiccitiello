@@ -7,6 +7,7 @@ import com.BuonoRiccitiello.twitter.observer.UserSubject;
 import com.BuonoRiccitiello.twitter.repository.HashtagRepository;
 import com.BuonoRiccitiello.twitter.repository.MessageRepository;
 import com.BuonoRiccitiello.twitter.repository.UserRepository;
+import com.BuonoRiccitiello.twitter.storage.AvatarStorage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,9 @@ class TwitterServiceProfileTest {
     @Mock
     private LogNotificationObserver logNotificationObserver;
 
+    @Mock
+    private AvatarStorage avatarStorage;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -54,7 +58,8 @@ class TwitterServiceProfileTest {
                 authService,
                 channelFactory,
                 userSubject,
-                logNotificationObserver
+                logNotificationObserver,
+                avatarStorage
         );
     }
 

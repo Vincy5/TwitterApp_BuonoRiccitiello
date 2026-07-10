@@ -4,6 +4,7 @@ import com.BuonoRiccitiello.twitter.exception.UserNotFoundException;
 import com.BuonoRiccitiello.twitter.model.User;
 import com.BuonoRiccitiello.twitter.observer.UserSubject;
 import com.BuonoRiccitiello.twitter.repository.UserRepository;
+import com.BuonoRiccitiello.twitter.repository.MessageRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +41,7 @@ public class DeleteUserCommand implements AdminCommand {
 
     private final Long userId;
     private final UserRepository userRepository;
+    private final MessageRepository messageRepository;
     private final UserSubject userSubject;
 
     /**
@@ -49,9 +51,10 @@ public class DeleteUserCommand implements AdminCommand {
      * @param userRepository il repository per accedere ai dati degli utenti
      * @param userSubject il subject per notificare gli observer
      */
-    public DeleteUserCommand(Long userId, UserRepository userRepository, UserSubject userSubject) {
+    public DeleteUserCommand(Long userId, UserRepository userRepository, MessageRepository messageRepository, UserSubject userSubject) {
         this.userId = userId;
         this.userRepository = userRepository;
+        this.messageRepository = messageRepository;
         this.userSubject = userSubject;
     }
 
@@ -79,15 +82,16 @@ public class DeleteUserCommand implements AdminCommand {
                         "Utente con ID " + userId + " non trovato nel sistema."
                 ));
 
-        // 2. Notifica i follower tramite Observer pattern
+        // 2. Rimuove i messaggi dell'utente per evitare vincoli referenziali
+        logger.debug("Rimozione messaggi dell'utente ID={} prima dell'eliminazione", userId);
+        messageRepository.deleteByAuthor_Id(userId);
+
+        // 3. Notifica i follower tramite Observer pattern
         logger.debug("Notificazione in corso ai {} follower dell'utente '{}'",
                 user.getFollowers().size(), user.getUsername());
         userSubject.notifyUserDeleted(user);
 
-        // 3. Elimina l'utente dal database
-        // userRepository.deleteById(userId);
-
-        //Prima dell eliminazione pulizia dalle relazioni ManyToMany
+        // 4. Prima dell'eliminazione pulizia dalle relazioni ManyToMany
 
         user.getFollowers().forEach(follower -> follower.getFollowing().remove(user));
         user.getFollowing().forEach(followed -> followed.getFollowers().remove(user));

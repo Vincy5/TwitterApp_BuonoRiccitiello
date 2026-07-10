@@ -6,6 +6,7 @@
     <title>Twitter App - Home BuonoRiccitiello</title>
     <link rel="icon" type="image/svg+xml" th:href="@{/img/twitter-logo.svg}">
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="twitter-layout">
     <div th:if="${success}" class="toast toast-success" th:text="${success}"></div>
@@ -21,21 +22,26 @@
 
             <nav class="main-menu">
                 <a th:href="@{/home}" class="nav-item active">
-                    <span class="nav-icon">⌂</span>
+                    <i class="nav-icon fas fa-home"></i>
                     <span>Home</span>
                 </a>
                 <a th:href="@{/profile}" class="nav-item">
-                    <span class="nav-icon">◉</span>
+                    <i class="nav-icon fas fa-user-circle"></i>
                     <span>Profilo</span>
+                </a>
+                <a  th:if="${loggedInUser.role.name() == 'UTENTE'}"
+                    th:href="@{/notifications}" class="nav-item">
+                    <i class="nav-icon fas fa-bell"></i>
+                    <span>Notifiche</span>
                 </a>
                 <a th:if="${loggedInUser.role.name() == 'ADMIN'}"
                    th:href="@{/admin}"
                    class="nav-item">
-                    <span class="nav-icon">⚙</span>
+                    <i class="nav-icon fas fa-cog"></i>
                     <span>Admin</span>
                 </a>
                 <a href="#" class="nav-item nav-logout" data-logout-open>
-                    <span class="nav-icon">⇢</span>
+                    <i class="nav-icon fas fa-sign-out-alt"></i>
                     <span>Esci</span>
                 </a>
             </nav>
@@ -48,7 +54,7 @@
                     <strong th:text="${loggedInUser.username}"></strong>
                     <small th:text="${loggedInUser.email}"></small>
                 </div>
-                <a th:href="@{/profile}" class="account-more" title="Apri profilo">•••</a>
+                <a th:href="@{/profile}" class="account-more" title="Apri profilo"><i class="fas fa-ellipsis-h"></i></a>
             </div>
         </aside>
 
@@ -85,7 +91,7 @@
                                 <button type="submit"
                                         class="btn btn-small btn-danger btn-ghost-danger"
                                         onclick="return confirm('Vuoi eliminare questo messaggio?')">
-                                    Elimina
+                                    <i class="fas fa-trash"></i>
                                 </button>
                             </form>
                         </div>
@@ -124,7 +130,7 @@
                     <div class="form-group compact">
                         <label for="hashtag">Hashtag opzionale</label>
                         <input type="text" id="hashtag" th:field="*{hashtag}"
-                               class="form-control" placeholder="es. #progetto">
+                               class="form-control" placeholder="es. progetto">
                     </div>
 
                     <div class="compose-actions">

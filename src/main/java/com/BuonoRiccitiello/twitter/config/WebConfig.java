@@ -3,6 +3,8 @@ package com.BuonoRiccitiello.twitter.config;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.filter.HiddenHttpMethodFilter;
 
 /**
  * Configurazione MVC per esporre i file caricati dagli utenti.
@@ -14,5 +16,14 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:uploads/");
+    }
+
+    /**
+     * Register HiddenHttpMethodFilter to support HTTP method override (_method hidden field)
+     * so HTML forms can simulate DELETE/PUT.
+     */
+    @Bean
+    public HiddenHttpMethodFilter hiddenHttpMethodFilter() {
+        return new HiddenHttpMethodFilter();
     }
 }
