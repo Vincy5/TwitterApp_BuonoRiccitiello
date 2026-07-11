@@ -6,6 +6,7 @@
     <title>Notifiche - Twitter App</title>
     <link rel="icon" type="image/svg+xml" th:href="@{/img/twitter-logo.svg}">
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="twitter-layout">
 
@@ -19,29 +20,30 @@
 
         <nav class="main-menu">
             <a th:href="@{/home}" class="nav-item">
-                <span class="nav-icon">⌂</span>
+                <i class="nav-icon fas fa-home"></i>
                 <span>Home</span>
             </a>
 
             <a th:href="@{/profile}" class="nav-item">
-                <span class="nav-icon">◉</span>
+                <i class="nav-icon fas fa-user-circle"></i>
                 <span>Profilo</span>
             </a>
 
             <a th:href="@{/notifications}" class="nav-item active">
-                <span class="nav-icon">🔔</span>
+                <i class="nav-icon fas fa-bell"></i>
                 <span>Notifiche</span>
+                <span class="nav-badge" th:if="${hasUnreadNotifications}"></span>
             </a>
 
             <a th:if="${loggedInUser.role.name() == 'ADMIN'}"
                th:href="@{/admin}"
                class="nav-item">
-                <span class="nav-icon">⚙</span>
+                <i class="nav-icon fas fa-cog"></i>
                 <span>Admin</span>
             </a>
 
             <a href="#" class="nav-item nav-logout" data-logout-open>
-                <span class="nav-icon">⇢</span>
+                <i class="nav-icon fas fa-sign-out-alt"></i>
                 <span>Esci</span>
             </a>
         </nav>
@@ -56,7 +58,7 @@
                 <small th:text="${loggedInUser.email}">email</small>
             </div>
 
-            <a th:href="@{/profile}" class="account-more" title="Apri profilo">•••</a>
+            <a th:href="@{/profile}" class="account-more" title="Apri profilo"><i class="fas fa-ellipsis-h"></i></a>
         </div>
     </aside>
 
@@ -73,7 +75,7 @@
             </div>
 
             <article th:each="notification : ${notifications}" class="tweet-card notification-card">
-                <div class="notification-round-icon">🔔</div>
+                <div class="notification-round-icon"><i class="fas fa-bell"></i></div>
 
                 <div class="tweet-body">
                     <div class="tweet-topline">
@@ -91,16 +93,6 @@
             </article>
         </section>
     </main>
-
-    <aside class="right-panel">
-        <section class="card">
-            <h2>Info notifiche</h2>
-            <p class="text-muted">
-                Le notifiche vengono generate tramite Observer Pattern quando un utente seguito viene eliminato dal sistema.
-            </p>
-        </section>
-    </aside>
-
 </div>
 
 <div id="logoutModal" class="logout-modal" aria-hidden="true">

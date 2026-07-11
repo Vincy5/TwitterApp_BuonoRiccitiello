@@ -66,7 +66,7 @@ class DeleteUserCommandTest {
         deleteUserCommand.execute();
 
         // Assert
-        verify(userRepository, times(1)).delete(testUser);
+        verify(userRepository, times(1)).deleteById(testUser.getId());
     }
 
     @Test
@@ -96,7 +96,7 @@ class DeleteUserCommandTest {
         );
 
         // Verifica che l'utente non sia stato eliminato
-        verify(userRepository, never()).delete(any());
+        verify(userRepository, never()).deleteById(anyLong());
     }
 
     @Test
@@ -127,6 +127,6 @@ class DeleteUserCommandTest {
 
         // Assert - Verifica che entrambi i metodi siano stati chiamati
         verify(userSubject).notifyUserDeleted(testUser);
-        verify(userRepository).delete(testUser);
+        verify(userRepository).deleteById(testUser.getId());
     }
 }

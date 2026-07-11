@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     setupAutoDismissToasts();
     setupLogoutModal();
+    setupDeleteConfirmModal();
     setupAvatarValidation();
 });
 
@@ -39,6 +40,65 @@ function setupLogoutModal() {
     openers.forEach(function (opener) {
         opener.addEventListener('click', openModal);
     });
+
+    if (cancelButton) {
+        cancelButton.addEventListener('click', closeModal);
+    }
+
+    modal.addEventListener('click', function (event) {
+        if (event.target === modal) {
+            closeModal();
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && modal.classList.contains('is-open')) {
+            closeModal();
+        }
+    });
+}
+
+function setupDeleteConfirmModal() {
+    const modal = document.getElementById('deleteConfirmModal');
+    if (!modal) {
+        return;
+    }
+
+    const confirmButton = modal.querySelector('[data-delete-confirm]');
+    const cancelButton = modal.querySelector('[data-delete-cancel]');
+    let pendingForm = null;
+
+    function openModal(form) {
+        pendingForm = form;
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        if (confirmButton) {
+            confirmButton.focus();
+        }
+    }
+
+    function closeModal() {
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+        pendingForm = null;
+    }
+
+    // Intercetta i form con data-delete-confirm
+    document.querySelectorAll('[data-delete-confirm]').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            openModal(form);
+        });
+    });
+
+    if (confirmButton) {
+        confirmButton.addEventListener('click', function () {
+            if (pendingForm) {
+                pendingForm.submit();
+            }
+            closeModal();
+        });
+    }
 
     if (cancelButton) {
         cancelButton.addEventListener('click', closeModal);

@@ -140,6 +140,17 @@ a:hover {
     line-height: 1;
 }
 
+/* Badge piccolo per notifiche non lette */
+.nav-badge {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--danger-color);
+    margin-left: 6px;
+    box-shadow: 0 0 0 2px #fff;
+}
+
 .nav-logout {
     color: var(--danger-color);
 }
@@ -882,7 +893,10 @@ a:hover {
     border-bottom: 1px solid var(--border-color);
     text-align: left;
     vertical-align: top;
-    overflow-wrap: anywhere;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 600px;
 }
 
 .table th {
@@ -890,6 +904,7 @@ a:hover {
     font-size: 14px;
     text-transform: uppercase;
     letter-spacing: 0.03em;
+    white-space: nowrap;
 }
 
 .form-search {
@@ -989,6 +1004,7 @@ a:hover {
     display: flex;
     justify-content: center;
     gap: 12px;
+    margin-top: 1rem;
 }
 
 @keyframes modalIn {
@@ -1155,4 +1171,8 @@ a:hover {
     .notification-card .tweet-content {
         margin-top: 6px;
     }
+}
+
+.mr-1 {
+    margin-right: 0.5rem;
 }

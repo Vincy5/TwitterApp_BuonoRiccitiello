@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twitter App - Home BuonoRiccitiello</title>
+    <title>Home - Twitter App</title>
     <link rel="icon" type="image/svg+xml" th:href="@{/img/twitter-logo.svg}">
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -33,6 +33,7 @@
                     th:href="@{/notifications}" class="nav-item">
                     <i class="nav-icon fas fa-bell"></i>
                     <span>Notifiche</span>
+                    <span class="nav-badge" th:if="${hasUnreadNotifications}"></span>
                 </a>
                 <a th:if="${loggedInUser.role.name() == 'ADMIN'}"
                    th:href="@{/admin}"

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twitter App - Admin BuonoRiccitiello</title>
+    <title>Admin - Twitter App</title>
     <link rel="icon" type="image/svg+xml" th:href="@{/img/twitter-logo.svg}">
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -39,7 +39,6 @@
         <!-- Sezione 1: Gestione Utenti -->
         <div class="card">
             <h2>Gestione Utenti</h2>
-            
             <table class="table">
                 <thead>
                     <tr>
@@ -57,13 +56,14 @@
                         <td th:text="${user.email}"></td>
                         <td th:text="${user.role}"></td>
                         <td>
-                            <form th:action="@{/admin/delete/{id}(id=${user.id})}" method="post" class="inline-form">
-                                <input type="hidden" name="_method" value="delete" />
-                                <button type="submit" class="btn btn-small btn-danger"
-                                        onclick="return confirm('Sei sicuro di voler eliminare questo utente?')">
-                                    <i class="fas fa-trash"></i> Elimina
-                                </button>
-                            </form>
+                            <div th:if="${user.role.name() != 'ADMIN'}">
+                                <form th:action="@{/admin/delete/{id}(id=${user.id})}" method="post" class="inline-form" data-delete-confirm>
+                                    <input type="hidden" name="_method" value="delete" />
+                                    <button type="submit" class="btn btn-small btn-danger">
+                                        <i class="fas fa-trash mr-1"></i> Elimina
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -86,7 +86,7 @@
             <!-- Risultati della ricerca -->
             <div th:if="${searchResults}" class="search-results">
                 <h3 th:text="'Risultati per: #' + ${searchHashtag}"></h3>
-                
+
                 <table class="table">
                     <thead>
                         <tr>
@@ -120,6 +120,17 @@
             <div class="logout-modal-actions">
                 <a th:href="@{/logout}" class="btn btn-danger">Sì</a>
                 <button type="button" class="btn btn-secondary" data-logout-cancel>No</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteConfirmModal" class="logout-modal" aria-hidden="true">
+        <div class="logout-modal-card" role="dialog" aria-modal="true" aria-labelledby="deleteTitle">
+            <h2 id="deleteTitle">Sei sicuro di voler eliminare questo utente?</h2>
+            <p>Questa azione non può essere annullata. Tutti i messaggi e i dati dell'utente verranno eliminati.</p>
+            <div class="logout-modal-actions">
+                <button type="button" class="btn btn-danger" data-delete-confirm>Sì, elimina</button>
+                <button type="button" class="btn btn-secondary" data-delete-cancel>No, annulla</button>
             </div>
         </div>
     </div>

@@ -27,11 +27,21 @@ public class NotificationController {
             return "redirect:/login";
         }
 
+        // Prima, marca tutte le notifiche come lette per l'utente corrente
+        try {
+            notificationRepository.markAllReadByRecipientId(loggedInUser.getId());
+        } catch (Exception ignore) {
+            // In caso di errore non blocchiamo la visualizzazione
+        }
+
         List<Notification> notifications =
                 notificationRepository.findByRecipient_IdOrderByCreatedAtDesc(loggedInUser.getId());
 
         model.addAttribute("loggedInUser", loggedInUser);
         model.addAttribute("notifications", notifications);
+        // Sovrascrivo l'attributo globale per rimuovere il pallino nelle pagine dopo aver letto
+        model.addAttribute("hasUnreadNotifications", false);
+        model.addAttribute("unreadNotificationsCount", 0);
 
         return "notifications";
     }

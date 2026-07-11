@@ -100,11 +100,21 @@ public class AdminController {
             return "redirect:/home";
         }
 
+        // Verifica che l'utente da eliminare esista e non sia un ADMIN
         try {
+            User targetUser = twitterService.getUserById(userId);
+            if ("ADMIN".equals(targetUser.getRole().toString())) {
+                redirectAttributes.addFlashAttribute("error", "Operazione non consentita: non puoi eliminare un utente con ruolo ADMIN");
+                return "redirect:/admin";
+            }
+
             // Elimina l'utente
             twitterService.adminDeleteUser(userId);
             redirectAttributes.addFlashAttribute("success", "Utente eliminato con successo");
         } catch (UserNotFoundException e) {
+            redirectAttributes.addFlashAttribute("error", "Utente non trovato: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            // getUserById usa IllegalArgumentException per l'utente non trovato
             redirectAttributes.addFlashAttribute("error", "Utente non trovato: " + e.getMessage());
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Errore durante l'eliminazione: " + e.getMessage());

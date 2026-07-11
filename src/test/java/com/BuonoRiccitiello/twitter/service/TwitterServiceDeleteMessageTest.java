@@ -64,6 +64,7 @@ class TwitterServiceDeleteMessageTest {
 
     @BeforeEach
     void setUp() {
+        MockitoAnnotations.openMocks(this);
         twitterService = new TwitterService(
         userRepository,
         messageRepository,

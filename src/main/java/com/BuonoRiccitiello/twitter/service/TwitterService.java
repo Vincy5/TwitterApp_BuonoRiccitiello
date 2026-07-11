@@ -346,6 +346,11 @@ public class TwitterService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public long getUnreadNotificationsCount(Long userId) {
+        return notificationRepository.countByRecipient_IdAndReadFalse(userId);
+    }
+
     /**
      * Aggiorna la password dell'utente dopo aver verificato quella attuale.
      *
