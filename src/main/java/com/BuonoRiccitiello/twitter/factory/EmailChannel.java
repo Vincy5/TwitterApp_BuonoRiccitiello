@@ -45,7 +45,7 @@ public class EmailChannel implements MessageChannel {
     @Override
     public void send(Message message) {
         String subject = "Nuovo messaggio da " + message.getAuthor().getUsername();
-        String htmlContent = "<h2>" + subject + "</h2><p>" + message.getContent() + "</p>";
+        //String htmlContent = "<h2>" + subject + "</h2><p>" + message.getContent() + "</p>";
 
         logger.info(
                 "[EMAIL CHANNEL] Email inviata con subject: '{}' - Contenuto: '{}' - Mittente: {}",

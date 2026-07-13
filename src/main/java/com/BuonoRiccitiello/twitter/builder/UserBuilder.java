@@ -1,6 +1,6 @@
 package com.BuonoRiccitiello.twitter.builder;
 
-import com.BuonoRiccitiello.twitter.exception.UserAlreadyExistsException;
+//import com.BuonoRiccitiello.twitter.exception.UserAlreadyExistsException;
 import com.BuonoRiccitiello.twitter.model.Role;
 import com.BuonoRiccitiello.twitter.model.User;
 
