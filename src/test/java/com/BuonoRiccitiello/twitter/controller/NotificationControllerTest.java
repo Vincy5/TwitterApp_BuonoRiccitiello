@@ -1,6 +1,6 @@
 package com.BuonoRiccitiello.twitter.controller;
 
-import com.BuonoRiccitiello.twitter.model.Notification;
+//import com.BuonoRiccitiello.twitter.model.Notification;
 import com.BuonoRiccitiello.twitter.model.User;
 import com.BuonoRiccitiello.twitter.repository.NotificationRepository;
 import jakarta.servlet.http.HttpSession;
