@@ -2,6 +2,7 @@ package com.BuonoRiccitiello.twitter.service;
 
 import com.BuonoRiccitiello.twitter.builder.MessageBuilder;
 import com.BuonoRiccitiello.twitter.builder.UserBuilder;
+import com.BuonoRiccitiello.twitter.command.CommandInvoker;
 import com.BuonoRiccitiello.twitter.command.DeleteUserCommand;
 import com.BuonoRiccitiello.twitter.command.ViewMessagesByHashtagCommand;
 import com.BuonoRiccitiello.twitter.exception.UserAlreadyExistsException;
@@ -12,7 +13,6 @@ import com.BuonoRiccitiello.twitter.model.Hashtag;
 import com.BuonoRiccitiello.twitter.model.Message;
 import com.BuonoRiccitiello.twitter.model.User;
 import com.BuonoRiccitiello.twitter.observer.LogNotificationObserver;
-import com.BuonoRiccitiello.twitter.observer.FollowersNotificationObserver;
 import com.BuonoRiccitiello.twitter.observer.NotificationPersistenceObserver;
 import com.BuonoRiccitiello.twitter.observer.UserSubject;
 import com.BuonoRiccitiello.twitter.repository.HashtagRepository;
@@ -73,10 +73,10 @@ public class TwitterService {
     private final ChannelFactory channelFactory;
     private final UserSubject userSubject;
     private final LogNotificationObserver logNotificationObserver;
-    private final FollowersNotificationObserver followersNotificationObserver;
     private final NotificationPersistenceObserver notificationPersistenceObserver;
     private final AvatarStorage avatarStorage;
     private final NotificationRepository notificationRepository;
+    private final CommandInvoker commandInvoker;
     
 
     /**
@@ -90,10 +90,10 @@ public class TwitterService {
             ChannelFactory channelFactory,
             UserSubject userSubject,
             LogNotificationObserver logNotificationObserver,
-            FollowersNotificationObserver followersNotificationObserver,
             NotificationPersistenceObserver notificationPersistenceObserver,
             AvatarStorage avatarStorage,
-            NotificationRepository notificationRepository
+            NotificationRepository notificationRepository,
+            CommandInvoker commandInvoker
     ) {
         this.userRepository = userRepository;
         this.messageRepository = messageRepository;
@@ -102,13 +102,12 @@ public class TwitterService {
         this.channelFactory = channelFactory;
         this.userSubject = userSubject;
         this.logNotificationObserver = logNotificationObserver;
-        this.followersNotificationObserver = followersNotificationObserver;
         this.notificationPersistenceObserver = notificationPersistenceObserver;
         this.avatarStorage = avatarStorage;
         this.userSubject.attach(this.logNotificationObserver);
-        this.userSubject.attach(this.followersNotificationObserver);
         this.userSubject.attach(this.notificationPersistenceObserver);
         this.notificationRepository = notificationRepository;
+        this.commandInvoker = commandInvoker;
     }
 
     /**
@@ -149,6 +148,13 @@ public class TwitterService {
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new UserAlreadyExistsException(
                     "Lo username '" + user.getUsername() + "' è già registrato nel sistema."
+            );
+        }
+
+        // Verifica che la email non esista già (dopo la build per coerenza)
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new UserAlreadyExistsException(
+                    "L'email '" + user.getEmail() + "' è già registrata nel sistema."
             );
         }
 
@@ -509,7 +515,11 @@ public class TwitterService {
                 userSubject
         );
 
-        deleteCommand.execute();
+        boolean success = commandInvoker.executeCommand(deleteCommand);
+
+        if (!success) {
+            throw new IllegalStateException("Errore durante l'eliminazione dell'utente.");
+        }
     }
 
     /**
@@ -529,8 +539,13 @@ public class TwitterService {
                 messageRepository
         );
 
-        viewCommand.execute();
-        return viewCommand.getResult();
+        Object result = commandInvoker.executeCommandAndGetResult(viewCommand);
+
+        if (result instanceof List<?>) {
+            return (List<Message>) result;
+        }
+
+        return List.of();
     }
 
     /**

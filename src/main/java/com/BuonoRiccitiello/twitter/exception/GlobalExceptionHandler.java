@@ -33,20 +33,6 @@ public class GlobalExceptionHandler {
         return mv;
     }
 
-    @ExceptionHandler(InvalidHashtagException.class)
-    public ModelAndView handleInvalidHashtag(InvalidHashtagException ex) {
-        ModelAndView mv = new ModelAndView("error");
-        mv.addObject("errorMessage", "Hashtag non valido.");
-        return mv;
-    }
-
-    @ExceptionHandler(UnauthorizedActionException.class)
-    public ModelAndView handleUnauthorized(UnauthorizedActionException ex) {
-        ModelAndView mv = new ModelAndView("error");
-        mv.addObject("errorMessage", "Azione non autorizzata.");
-        return mv;
-    }
-
     @ExceptionHandler(TwitterException.class)
     public ModelAndView handleGeneric(TwitterException ex) {
         ModelAndView mv = new ModelAndView("error");

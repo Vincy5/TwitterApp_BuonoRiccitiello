@@ -1,6 +1,5 @@
 package com.BuonoRiccitiello.twitter.service;
 
-import com.BuonoRiccitiello.twitter.observer.FollowersNotificationObserver;
 import com.BuonoRiccitiello.twitter.observer.NotificationPersistenceObserver;
 import com.BuonoRiccitiello.twitter.factory.ChannelFactory;
 import com.BuonoRiccitiello.twitter.model.Message;
@@ -54,9 +53,6 @@ class TwitterServiceDeleteMessageTest {
     private AvatarStorage avatarStorage;
 
     @Mock
-    private FollowersNotificationObserver followersNotificationObserver;
-
-    @Mock
     private NotificationPersistenceObserver notificationPersistenceObserver;
 
     @Mock
@@ -73,7 +69,6 @@ class TwitterServiceDeleteMessageTest {
         channelFactory,
         userSubject,
         logNotificationObserver,
-        followersNotificationObserver,
         notificationPersistenceObserver,
         avatarStorage,
         notificationRepository

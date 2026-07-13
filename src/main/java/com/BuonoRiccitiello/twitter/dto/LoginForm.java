@@ -1,6 +1,8 @@
 package com.BuonoRiccitiello.twitter.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * DTO per il form di login.
@@ -14,6 +16,8 @@ import jakarta.validation.constraints.NotBlank;
  *   <li>password: obbligatoria</li>
  * </ul>
  */
+@Setter
+@Getter
 public class LoginForm {
 
     @NotBlank(message = "L'username è obbligatorio")
@@ -22,21 +26,4 @@ public class LoginForm {
     @NotBlank(message = "La password è obbligatoria")
     private String password;
 
-    // Getter e Setter
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
 }

@@ -140,17 +140,6 @@ public class AuthController {
         }
 
         try {
-
-            /* QUESTO BLOCCO VA TOLTO pk viene chiamata la build senza avere la passwordhash
-            // Crea l'utente usando UserBuilder
-            User user = new UserBuilder()
-                    .withUsername(registerForm.getUsername())
-                    .withEmail(registerForm.getEmail())
-                    .withPassword(registerForm.getPassword())
-                    .build();
-            */
-
-
             // Delega al service per la registrazione (che codificherà la password e salverà a DB)
             // Nota: il service accede direttamente ai dati via getRawPassword()
             twitterService.registerUser(new UserBuilder()

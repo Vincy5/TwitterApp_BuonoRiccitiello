@@ -1,0 +1,13 @@
+com.BuonoRiccitiello.twitter
+com.BuonoRiccitiello.twitter.builder
+com.BuonoRiccitiello.twitter.command
+com.BuonoRiccitiello.twitter.config
+com.BuonoRiccitiello.twitter.controller
+com.BuonoRiccitiello.twitter.dto
+com.BuonoRiccitiello.twitter.exception
+com.BuonoRiccitiello.twitter.factory
+com.BuonoRiccitiello.twitter.model
+com.BuonoRiccitiello.twitter.observer
+com.BuonoRiccitiello.twitter.repository
+com.BuonoRiccitiello.twitter.service
+com.BuonoRiccitiello.twitter.storage

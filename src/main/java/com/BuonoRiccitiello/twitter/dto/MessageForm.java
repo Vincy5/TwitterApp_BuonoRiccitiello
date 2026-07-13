@@ -3,6 +3,8 @@ package com.BuonoRiccitiello.twitter.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import com.BuonoRiccitiello.twitter.model.Channel;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * DTO per il form di pubblicazione di un messaggio.
@@ -17,6 +19,8 @@ import com.BuonoRiccitiello.twitter.model.Channel;
  *   <li>channel: obbligatorio (WEB, SMS, EMAIL, IM)</li>
  * </ul>
  */
+@Setter
+@Getter
 public class MessageForm {
 
     @NotBlank(message = "Il contenuto del messaggio è obbligatorio")
@@ -27,32 +31,6 @@ public class MessageForm {
 
     @NotBlank(message = "Seleziona un canale di invio")
     private String channel; // Enum come stringa: WEB, SMS, EMAIL, IM
-
-    // Getter e Setter
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public String getHashtag() {
-        return hashtag;
-    }
-
-    public void setHashtag(String hashtag) {
-        this.hashtag = hashtag;
-    }
-
-    public String getChannel() {
-        return channel;
-    }
-
-    public void setChannel(String channel) {
-        this.channel = channel;
-    }
 
     /**
      * Converte la stringa del canale in enum Channel.

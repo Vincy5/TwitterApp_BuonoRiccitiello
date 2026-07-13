@@ -49,6 +49,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     boolean existsByUsername(String username);
 
+    /**
+     * Verifica se una email è già registrata.
+     *
+     * @param email l'email da verificare
+     * @return true se l'email esiste, false altrimenti
+     */
+    boolean existsByEmail(String email);
+
     @Modifying
     @Query(value = "DELETE FROM user_following WHERE user_id = :userId OR following_id = :userId", nativeQuery = true)
     void deleteAllFollowRelationsForUser(@Param("userId") Long userId);

@@ -10,6 +10,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;
 
+
+/**
+ * Controller per la gestione della pagina delle notifiche dell'utente.
+ * <p>
+ * Questo controller gestisce le richieste relative alla visualizzazione delle
+ * notifiche ricevute dall'utente autenticato, occupandosi anche di aggiornare
+ * il loro stato da "non lette" a "lette".
+ * </p>
+ *
+ */
 @Controller
 public class NotificationController {
 
