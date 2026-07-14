@@ -14,8 +14,6 @@ import org.springframework.web.filter.HiddenHttpMethodFilter;
  * ai metodi HTTP non nativi dei form HTML standard (come PUT e DELETE).
  * </p>
  *
- * @author BuonoRiccitiello
- * @version 1.0
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {

@@ -14,7 +14,6 @@ package com.BuonoRiccitiello.twitter.command;
  * <ul>
  *   <li>{@link DeleteUserCommand} - Elimina un utente dal sistema</li>
  *   <li>{@link ViewMessagesByHashtagCommand} - Recupera i messaggi per un hashtag</li>
- *   <li>(Future estensioni) BanUserCommand, ModerateMessageCommand, ecc.</li>
  * </ul>
  *
  * <p><strong>Vantaggi del pattern Command:</strong></p>

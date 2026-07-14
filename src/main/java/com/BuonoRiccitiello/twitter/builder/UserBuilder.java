@@ -1,8 +1,8 @@
 package com.BuonoRiccitiello.twitter.builder;
 
-//import com.BuonoRiccitiello.twitter.exception.UserAlreadyExistsException;
 import com.BuonoRiccitiello.twitter.model.Role;
 import com.BuonoRiccitiello.twitter.model.User;
+import lombok.Getter;
 
 import java.util.HashSet;
 
@@ -36,6 +36,13 @@ public class UserBuilder {
     private String username;
     private String email;
     private String passwordHash;
+    /**
+     * -- GETTER --
+     *  Recupera la password in chiaro (per uso interno nel service layer).
+     *
+     * @return la password in chiaro
+     */
+    @Getter
     private String rawPassword; // Memorizza la password in chiaro prima della codifica
     private Role role;
 
@@ -87,15 +94,6 @@ public class UserBuilder {
     public UserBuilder withPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
         return this;
-    }
-
-    /**
-     * Recupera la password in chiaro (per uso interno nel service layer).
-     *
-     * @return la password in chiaro
-     */
-    public String getRawPassword() {
-        return rawPassword;
     }
 
     /**

@@ -60,7 +60,7 @@ public class AuthController {
         return "login";
     }
 
-    /**
+     /**
      * Elabora il submit del form di login.
      *
      * <p>Se l'autenticazione ha successo, salva l'utente nella sessione e

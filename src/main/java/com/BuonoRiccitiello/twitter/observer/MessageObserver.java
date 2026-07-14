@@ -10,13 +10,12 @@ import com.BuonoRiccitiello.twitter.model.User;
  * <p>
  * Questa interfaccia rappresenta il ruolo di <strong>Observer</strong> nel design pattern Observer.
  * Un observer è un oggetto che vuole essere notificato quando accadono certi eventi
- * (ad esempio, quando un utente che segue pubblica un messaggio o quando viene eliminato).
+ * (ad esempio, quando un utente che segue quando viene eliminato).
  * </p>
  *
  * <p><strong>Implementazioni:</strong></p>
  * <ul>
  *   <li>{@link LogNotificationObserver} - Registra le notifiche su log</li>
- *   <li>EmailNotificationObserver - (Futura estensione) Invierebbe email agli utenti</li>
  *   <li>NotificationPersistenceObserver - (Futura estensione) Salverebbe a DB</li>
  * </ul>
  */

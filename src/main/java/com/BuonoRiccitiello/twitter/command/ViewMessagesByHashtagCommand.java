@@ -82,23 +82,4 @@ public class ViewMessagesByHashtagCommand implements AdminCommand {
     public List<Message> getResult() {
         return result != null ? result : List.of();
     }
-
-    /**
-     * Restituisce i messaggi raggruppati per hashtag.
-     *
-     * <p>Utile per visualizzare i risultati in una mappa strutturata.
-     * Se un messaggio ha null come hashtag, viene raggruppato sotto la chiave "NO_HASHTAG".</p>
-     *
-     * @return una Map dove la chiave è il nome dell'hashtag e il valore è la lista di messaggi
-     */
-    public Map<String, List<Message>> getResultGroupedByHashtag() {
-        if (result == null) {
-            return Map.of();
-        }
-
-        return result.stream()
-                .collect(Collectors.groupingBy(msg ->
-                        msg.getHashtag() != null ? msg.getHashtag().getName() : "NO_HASHTAG"
-                ));
-    }
 }

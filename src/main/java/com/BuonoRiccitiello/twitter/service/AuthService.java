@@ -21,8 +21,6 @@ import java.util.Optional;
  * <ul>
  *   <li>Le password non sono mai memorizzate in chiaro.</li>
  *   <li>BCrypt include salt e è resistente al brute force.</li>
- *   <li>In un'applicazione reale, si userebbe Spring Security con session management
- *       e CSRF protection.</li>
  * </ul>
  *
  * <p><strong>Utilizzo:</strong></p>

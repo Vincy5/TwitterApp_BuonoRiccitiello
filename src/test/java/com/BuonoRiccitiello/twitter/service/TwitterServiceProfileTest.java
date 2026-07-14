@@ -1,5 +1,6 @@
 package com.BuonoRiccitiello.twitter.service;
 
+import com.BuonoRiccitiello.twitter.command.CommandInvoker;
 import com.BuonoRiccitiello.twitter.observer.NotificationPersistenceObserver;
 import com.BuonoRiccitiello.twitter.factory.ChannelFactory;
 import com.BuonoRiccitiello.twitter.model.User;
@@ -57,6 +58,9 @@ class TwitterServiceProfileTest {
     @Mock
     private NotificationRepository notificationRepository;
 
+    @Mock
+    private CommandInvoker  commandInvoker;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -70,7 +74,8 @@ class TwitterServiceProfileTest {
             logNotificationObserver,
             notificationPersistenceObserver,
             avatarStorage,
-            notificationRepository
+            notificationRepository,
+            commandInvoker
         );
     }
 
