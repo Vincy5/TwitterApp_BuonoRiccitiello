@@ -16,10 +16,16 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
 /**
- * Controller per la gestione dell'interfaccia utente standard.
+ * Controller Spring MVC principale per la gestione dell'interfaccia utente standard.
+ * <p>
+ * Questa classe coordina i flussi di navigazione della piattaforma simili a un social network,
+ * tra cui la timeline della home page, la pubblicazione e l'eliminazione dei messaggi,
+ * le dinamiche di follow/unfollow, la visualizzazione del profilo e la gestione dei dati personali
+ * dell'account (cambio password e caricamento dell'avatar).
+ * </p>
  *
- * <p>Gestisce home, pubblicazione messaggi, follow/unfollow, profilo,
- * cambio password, immagine profilo e cancellazione dei messaggi personali.</p>
+ * @author BuonoRiccitiello
+ * @version 1.0
  */
 @Controller
 @RequestMapping("/")
@@ -27,12 +33,24 @@ public class UserController {
 
     private final TwitterService twitterService;
 
+    /**
+     * Costruttore per l'iniezione delle dipendenze di Spring.
+     *
+     * @param twitterService il servizio delle funzionalità core da iniettare
+     */
     public UserController(TwitterService twitterService) {
         this.twitterService = twitterService;
     }
 
     /**
-     * Recupera l'utente loggato dalla sessione, ricaricandolo dal database.
+     * Recupera l'utente correntemente loggato dalla sessione HTTP, aggiornando i suoi dati dal database.
+     * <p>
+     * Questo passaggio intermedio garantisce che qualsiasi mutamento di stato dell'utente (es. contatori,
+     * cambio avatar) effettuato in richieste parallele sia immediatamente visibile sul thread corrente.
+     * </p>
+     *
+     * @param session la sessione HTTP da cui estrarre l'attributo dell'utente loggato
+     * @return l'entità {@link User} aggiornata, oppure {@code null} se nessun utente è registrato in sessione
      */
     private User getLoggedUserOrNull(HttpSession session) {
         User loggedInUser = (User) session.getAttribute("loggedInUser");
@@ -46,7 +64,14 @@ public class UserController {
     }
 
     /**
-     * Evita redirect esterni o non validi dopo azioni POST.
+     * Valida ed esegue la sanificazione dell'URL di destinazione per evitare attacchi di Open Redirect.
+     * <p>
+     * Verifica che la stringa fornita sia un percorso relativo sicuro interno all'applicazione
+     * (deve iniziare con un singolo carattere {@code /}).
+     * </p>
+     *
+     * @param returnTo l'URL di destinazione desiderato richiesto dal client
+     * @return l'URL sanificato se valido, altrimenti il percorso predefinito {@code /home}
      */
     private String safeRedirect(String returnTo) {
         if (returnTo == null || returnTo.isBlank() || !returnTo.startsWith("/") || returnTo.startsWith("//")) {
@@ -56,7 +81,10 @@ public class UserController {
     }
 
     /**
-     * Inserisce nel model tutti i dati comuni della home.
+     * Popola il modello Spring MVC con tutti gli attributi condivisi necessari per renderizzare la home page.
+     *
+     * @param model il contenitore dei dati per la vista
+     * @param user  l'utente attualmente autenticato che sta visualizzando il feed
      */
     private void populateHomeModel(Model model, User user) {
         model.addAttribute("loggedInUser", user);
@@ -69,7 +97,14 @@ public class UserController {
     }
 
     /**
-     * Inserisce nel model tutti i dati comuni della pagina profilo.
+     * Popola il modello Spring MVC con tutti gli attributi specifici per la gestione della pagina profilo.
+     * <p>
+     * Determina quale scheda (tab) mostrare tra follower o utenti seguiti, estraendo i relativi elenchi.
+     * </p>
+     *
+     * @param model il contenitore dei dati per la vista
+     * @param user  l'utente titolare del profilo
+     * @param tab   la scheda attiva selezionata dall'utente (può essere "followers" o "following")
      */
     private void populateProfileModel(Model model, User user, String tab) {
         String activeTab = "followers".equalsIgnoreCase(tab) ? "followers" : "following";
@@ -89,7 +124,11 @@ public class UserController {
     }
 
     /**
-     * Visualizza la home page dell'utente loggato.
+     * Mostra la home page dell'applicazione con la timeline dei messaggi.
+     *
+     * @param session la sessione HTTP per verificare l'autenticazione
+     * @param model   il modello per iniettare i dati del feed e della form di pubblicazione
+     * @return il template "home" se loggato, altrimenti reindirizza alla pagina di login
      */
     @GetMapping("/home")
     public String showHome(HttpSession session, Model model) {
@@ -104,7 +143,12 @@ public class UserController {
     }
 
     /**
-     * Visualizza la pagina profilo separata dalla home.
+     * Visualizza la pagina del profilo personale dell'utente, con schede dedicate alle relazioni.
+     *
+     * @param tab     parametro opzionale per impostare il focus su "following" o "followers" (default "following")
+     * @param session la sessione HTTP per verificare l'autenticazione
+     * @param model   il modello per iniettare le informazioni del profilo
+     * @return il template "profile" se loggato, altrimenti reindirizza alla pagina di login
      */
     @GetMapping("/profile")
     public String showProfile(
@@ -122,7 +166,18 @@ public class UserController {
     }
 
     /**
-     * Pubblica un nuovo messaggio.
+     * Gestisce l'invio e la pubblicazione di un nuovo messaggio.
+     * <p>
+     * Se i vincoli di validazione del form falliscono, la pagina "home" viene ricaricata
+     * mostrando gli errori inline senza effettuare un redirect.
+     * </p>
+     *
+     * @param messageForm        il DTO contenente i dati del messaggio validati tramite JSR-380
+     * @param bindingResult      l'esito della validazione formale dei dati
+     * @param session            la sessione HTTP corrente
+     * @param model              il modello per re-iniettare i dati in caso di errore di validazione
+     * @param redirectAttributes attributi flash per propagare messaggi di successo oltre il redirect
+     * @return un redirect alla home se l'invio ha successo, altrimenti ritorna la vista "home" con l'errore
      */
     @PostMapping("/messages")
     public String postMessage(
@@ -161,7 +216,13 @@ public class UserController {
     }
 
     /**
-     * Segue un altro utente. Il parametro returnTo permette di tornare alla pagina corrente.
+     * Avvia il tracciamento (follow) nei confronti di un altro utente della piattaforma.
+     *
+     * @param userId             l'identificativo dell'utente da seguire
+     * @param returnTo           il percorso relativo a cui ritornare dopo l'azione (es. per restare sulla stessa pagina)
+     * @param session            la sessione HTTP corrente
+     * @param redirectAttributes attributi flash per i messaggi di esito dell'operazione
+     * @return un redirect sicuro all'URL indicato in {@code returnTo}
      */
     @PostMapping("/follow/{id}")
     public String follow(
@@ -186,7 +247,13 @@ public class UserController {
     }
 
     /**
-     * Smette di seguire un altro utente. Il parametro returnTo permette di tornare alla pagina corrente.
+     * Interrompe il tracciamento (unfollow) nei confronti di un utente precedentemente seguito.
+     *
+     * @param userId             l'identificativo dell'utente da smettere di seguire
+     * @param returnTo           il percorso relativo a cui ritornare dopo l'azione
+     * @param session            la sessione HTTP corrente
+     * @param redirectAttributes attributi flash per i messaggi di esito dell'operazione
+     * @return un redirect sicuro all'URL indicato in {@code returnTo}
      */
     @PostMapping("/unfollow/{id}")
     public String unfollow(
@@ -211,7 +278,13 @@ public class UserController {
     }
 
     /**
-     * Elimina un messaggio pubblicato dall'utente loggato.
+     * Consente la rimozione permanente di un messaggio di proprietà dell'utente loggato.
+     *
+     * @param messageId          l'ID del messaggio da eliminare
+     * @param returnTo           il percorso relativo a cui ritornare dopo l'azione
+     * @param session            la sessione HTTP corrente
+     * @param redirectAttributes attributi flash per i messaggi di esito dell'operazione
+     * @return un redirect sicuro all'URL indicato in {@code returnTo}
      */
     @PostMapping("/messages/delete/{id}")
     public String deleteMessage(
@@ -236,7 +309,13 @@ public class UserController {
     }
 
     /**
-     * Aggiorna la password dalla pagina profilo.
+     * Processa la richiesta di modifica della password dal pannello profilo.
+     *
+     * @param changePasswordForm DTO contenente password attuale, nuova password e conferma della nuova password
+     * @param bindingResult      l'esito della validazione dei campi del modulo
+     * @param session            la sessione HTTP corrente
+     * @param redirectAttributes attributi flash per comunicare il successo o l'errore dopo il redirect
+     * @return un reindirizzamento alla pagina del profilo
      */
     @PostMapping("/profile/change-password")
     public String changePassword(
@@ -271,7 +350,12 @@ public class UserController {
     }
 
     /**
-     * Aggiorna l'immagine profilo caricata dall'utente.
+     * Coordina il caricamento e l'assegnazione di un nuovo file d'immagine come avatar del profilo utente.
+     *
+     * @param avatar             l'oggetto wrapper del file binario inviato dal client multipart form
+     * @param session            la sessione HTTP corrente per aggiornare l'utente memorizzato in cache
+     * @param redirectAttributes attributi flash per notificare l'avvenuto caricamento
+     * @return un reindirizzamento alla pagina del profilo
      */
     @PostMapping("/profile/avatar")
     public String updateAvatar(

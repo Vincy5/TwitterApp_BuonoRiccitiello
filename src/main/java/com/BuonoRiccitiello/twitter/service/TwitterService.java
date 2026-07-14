@@ -33,33 +33,21 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-
 /**
- * Servizio principale per l'orchestrazione della logica di business dell'applicazione Twitter.
+ * Servizio core per l'orchestrazione della business logic dell'applicazione Twitter.
+ * <p>
+ * Questa classe funge da facciata e coordinatore principale del backend. Non implementa direttamente
+ * i pattern architetturali ma ne orchestra l'uso per garantire il Single Responsibility Principle (SRP).
+ * </p>
  *
- * <p><strong>Responsabilità:</strong></p>
+ * <p><strong>Design Pattern Utilizzati:</strong></p>
  * <ul>
- *   <li>Gestire la registrazione e il follow degli utenti.</li>
- *   <li>Gestire la pubblicazione dei messaggi con i pattern Builder e Factory.</li>
- *   <li>Notificare i follower tramite il pattern Observer.</li>
- *   <li>Orchestrare le operazioni amministrative tramite il pattern Command.</li>
+ *   <li><b>Builder:</b> Incapsula la complessa logica di creazione e validazione di {@link User} e {@link Message}.</li>
+ *   <li><b>Factory Method:</b> Genera in modo polimorfico il canale di invio appropriato (SMS, Email, ecc.) tramite {@link ChannelFactory}.</li>
+ *   <li><b>Observer:</b> Distribuisce in tempo reale le notifiche ai follower all'atto della pubblicazione di un messaggio.</li>
+ *   <li><b>Command:</b> Isola ed esegue le operazioni di amministrazione (es. cancellazione utenti) tramite un invoker dedicato.</li>
  * </ul>
  *
- * <p><strong>Design Pattern utilizzati:</strong></p>
- * <ul>
- *   <li><strong>Builder:</strong> Creazione di User e Message con validazione.</li>
- *   <li><strong>Factory Method:</strong> Creazione dei canali di invio messaggi.</li>
- *   <li><strong>Observer:</strong> Notificazione dei follower.</li>
- *   <li><strong>Command:</strong> Esecuzione di operazioni amministrative.</li>
- * </ul>
- *
- * <p><strong>Transazionalità:</strong></p>
- * <p>I metodi critici sono annotati con @Transactional per garantire la consistenza
- * dei dati e il rollback automatico in caso di errori.</p>
- *
- * <p><strong>Single Responsibility Principle:</strong></p>
- * <p>TwitterService NON reimplementa i pattern; li USA orchestrandoli.
- * La logica dei pattern rimane nei loro moduli specifici.</p>
  */
 @Service
 public class TwitterService {
@@ -77,10 +65,13 @@ public class TwitterService {
     private final AvatarStorage avatarStorage;
     private final NotificationRepository notificationRepository;
     private final CommandInvoker commandInvoker;
-    
 
     /**
-     * Costruttore con dependency injection.
+     * Costruttore per l'iniezione delle dipendenze e l'inizializzazione del sistema di notifiche.
+     * <p>
+     * In fase di avvio, provvede ad agganciare gli osservatori globali (Log e Persistenza) al
+     * registro dei soggetti {@link UserSubject}.
+     * </p>
      */
     public TwitterService(
             UserRepository userRepository,
@@ -104,126 +95,109 @@ public class TwitterService {
         this.logNotificationObserver = logNotificationObserver;
         this.notificationPersistenceObserver = notificationPersistenceObserver;
         this.avatarStorage = avatarStorage;
+
+        // Registrazione centralizzata degli Observer sul ciclo di vita dei messaggi
         this.userSubject.attach(this.logNotificationObserver);
         this.userSubject.attach(this.notificationPersistenceObserver);
+
         this.notificationRepository = notificationRepository;
         this.commandInvoker = commandInvoker;
     }
 
     /**
-     * Registra un nuovo utente nel sistema.
+     * Sottopone a persistenza un nuovo utente nel sistema applicando l'hashing della password.
      *
-     * <p><strong>Processo:</strong></p>
-     * <ol>
-     *   <li>Verifica che lo username non sia già registrato.</li>
-     *   <li>Codifica la password con BCrypt.</li>
-     *   <li>Costruisce l'utente tramite UserBuilder (validazione centralizzata).</li>
-     *   <li>Salva l'utente nel database.</li>
-     *   <li>Registra l'observer per le notifiche.</li>
-     * </ol>
-     *
-     * @param userBuilder il builder configurato con i dati dell'utente
-     * @return l'utente appena registrato
-     * @throws UserAlreadyExistsException se lo username è già in uso
-     * @throws IllegalArgumentException se i dati dell'utente non sono validi
+     * @param userBuilder l'istanza configurata del costruttore contenente i dati grezzi dell'utente
+     * @return l'entità {@link User} salvata sul database e completa di ID generato
+     * @throws UserAlreadyExistsException se lo username o l'indirizzo email risultano già censiti
+     * @throws IllegalArgumentException   se la password in chiaro risulta assente o non valida
      */
     @Transactional
     public User registerUser(UserBuilder userBuilder) throws UserAlreadyExistsException {
         logger.info("Registrazione nuovo utente in corso...");
 
-        // Recupera la password in chiaro dal builder
         String rawPassword = userBuilder.getRawPassword();
         if (rawPassword == null || rawPassword.trim().isEmpty()) {
             throw new IllegalArgumentException("La password è obbligatoria per la registrazione.");
         }
 
-        // Codifica la password con BCrypt
+        // Cifratura della password prima della finalizzazione dell'oggetto business
         String hashedPassword = authService.encodePassword(rawPassword);
         userBuilder.withPasswordHash(hashedPassword);
 
-        // Costruisce e valida l'utente (questo farà lanciare eccezioni se i dati non sono validi)
+        // Generazione dell'istanza: attiva la catena di validazione interna del Builder
         User user = userBuilder.build();
 
-        // Verifica che lo username non esista già (dopo la build per coerenza)
+        // Controlli di univocità sui vincoli unici di business
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new UserAlreadyExistsException(
                     "Lo username '" + user.getUsername() + "' è già registrato nel sistema."
             );
         }
 
-        // Verifica che la email non esista già (dopo la build per coerenza)
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new UserAlreadyExistsException(
                     "L'email '" + user.getEmail() + "' è già registrata nel sistema."
             );
         }
 
-        // Salva nel database
         user = userRepository.save(user);
         logger.info("Utente '{}' registrato con successo (ID={})", user.getUsername(), user.getId());
 
-        // Gli observer vengono ora registrati nel costruttore del service
-        // in modo che siano attivi anche per gli utenti già presenti nel DB.
+        // Assicura che l'observer sia attivo per il monitoraggio delle notifiche
         userSubject.attach(notificationPersistenceObserver);
 
         return user;
     }
 
     /**
-     * Un utente segue un altro utente.
+     * Stabilisce una relazione di "inseguimento" (follow) asimmetrica tra due utenti.
      *
-     * <p>Aggiunge l'utente seguito alla lista di "following" dell'utente follower.</p>
-     *
-     * @param followerId l'ID dell'utente che vuole seguire
-     * @param followedId l'ID dell'utente da seguire
-     * @throws IllegalArgumentException se uno degli utenti non esiste
+     * @param followerId l'identificativo dell'utente che avvia l'azione
+     * @param followedId l'identificativo dell'utente target che riceverà il follower
+     * @throws IllegalArgumentException se gli ID coincidono o se una delle due entità non esiste
      */
     @Transactional
     public void follow(Long followerId, Long followedId) {
         logger.info("L'utente {} sta seguendo l'utente {}", followerId, followedId);
 
         if (followerId.equals(followedId)) {
-                throw new IllegalArgumentException("Non puoi seguire te stesso.");
+            throw new IllegalArgumentException("Non puoi seguire te stesso.");
         }
 
         User follower = userRepository.findById(followerId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Follower con ID " + followerId + " non trovato"
-                ));
+                .orElseThrow(() -> new IllegalArgumentException("Follower con ID " + followerId + " non trovato"));
 
         User followedUser = userRepository.findById(followedId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Utente da seguire con ID " + followedId + " non trovato"
-                ));
+                .orElseThrow(() -> new IllegalArgumentException("Utente da seguire con ID " + followedId + " non trovato"));
 
+        // Impedisce duplicazioni nella collezione relazionale ManyToMany
         boolean alreadyFollowing = follower.getFollowing()
                 .stream()
                 .anyMatch(user -> user.getId().equals(followedId));
 
         if (alreadyFollowing) {
-                logger.info("L'utente '{}' segue già '{}'",
-                        follower.getUsername(), followedUser.getUsername());
-                return;
+            logger.info("L'utente '{}' segue già '{}'", follower.getUsername(), followedUser.getUsername());
+            return;
         }
 
+        // Aggiornamento bidirezionale della relazione in memoria
         follower.getFollowing().add(followedUser);
         followedUser.getFollowers().add(follower);
 
         userRepository.save(follower);
-
-        logger.info("L'utente '{}' sta ora seguendo '{}'",
-                follower.getUsername(), followedUser.getUsername());
- }
-
+        logger.info("L'utente '{}' sta ora seguendo '{}'", follower.getUsername(), followedUser.getUsername());
+    }
 
     /**
-     * Smette di seguire un utente.
+     * Rimuove la relazione di "inseguimento" (unfollow) tra due utenti.
+     * <p>
+     * Interviene su entrambi i lati della relazione ManyToMany per mantenere sincronizzato lo stato
+     * del grafo delle entità prima del flush sul database.
+     * </p>
      *
-     * <p>Rimuove la relazione ManyToMany sia dal lato following sia dal lato followers,
-     * in modo da mantenere coerente il database.</p>
-     *
-     * @param followerId l'ID dell'utente che vuole smettere di seguire
-     * @param followedId l'ID dell'utente da non seguire più
+     * @param followerId l'identificativo dell'utente che revoca il follow
+     * @param followedId l'identificativo dell'utente non più seguito
      */
     @Transactional
     public void unfollow(Long followerId, Long followedId) {
@@ -234,14 +208,10 @@ public class TwitterService {
         }
 
         User follower = userRepository.findById(followerId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Follower con ID " + followerId + " non trovato"
-                ));
+                .orElseThrow(() -> new IllegalArgumentException("Follower con ID " + followerId + " non trovato"));
 
         User followedUser = userRepository.findById(followedId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Utente da non seguire più con ID " + followedId + " non trovato"
-                ));
+                .orElseThrow(() -> new IllegalArgumentException("Utente da non seguire più con ID " + followedId + " non trovato"));
 
         follower.getFollowing().removeIf(user -> user.getId().equals(followedId));
         followedUser.getFollowers().removeIf(user -> user.getId().equals(followerId));
@@ -249,22 +219,31 @@ public class TwitterService {
         userRepository.save(follower);
         userRepository.save(followedUser);
 
-        logger.info("L'utente '{}' non segue più '{}'",
-                follower.getUsername(), followedUser.getUsername());
+        logger.info("L'utente '{}' non segue più '{}'", follower.getUsername(), followedUser.getUsername());
     }
 
+    /**
+     * Estrae un utente per ID all'interno di una transazione di sola lettura.
+     *
+     * @param userId l'ID da cercare
+     * @return l'entità {@link User} trovata
+     * @throws IllegalArgumentException se l'utente non esiste
+     */
     @Transactional(readOnly = true)
     public User getUserById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Utente con ID " + userId + " non trovato"
-                ));
+                .orElseThrow(() -> new IllegalArgumentException("Utente con ID " + userId + " non trovato"));
     }
 
+    /**
+     * Restituisce l'insieme di ID degli utenti seguiti, escludendo l'utente stesso.
+     *
+     * @param userId l'ID dell'utente di riferimento
+     * @return un {@link Set} di identificativi numerici
+     */
     @Transactional(readOnly = true)
     public Set<Long> getFollowingIds(Long userId) {
         User user = getUserById(userId);
-
         return user.getFollowing()
                 .stream()
                 .map(User::getId)
@@ -272,6 +251,12 @@ public class TwitterService {
                 .collect(Collectors.toSet());
     }
 
+    /**
+     * Calcola il numero totale di utenti seguiti.
+     *
+     * @param userId l'ID dell'utente di riferimento
+     * @return il conteggio degli utenti seguiti
+     */
     @Transactional(readOnly = true)
     public int getFollowingCount(Long userId) {
         return (int) getUserById(userId).getFollowing()
@@ -280,6 +265,12 @@ public class TwitterService {
                 .count();
     }
 
+    /**
+     * Calcola il numero totale di follower accreditati.
+     *
+     * @param userId l'ID dell'utente di riferimento
+     * @return il conteggio dei follower
+     */
     @Transactional(readOnly = true)
     public int getFollowersCount(Long userId) {
         return (int) getUserById(userId).getFollowers()
@@ -288,21 +279,34 @@ public class TwitterService {
                 .count();
     }
 
+    /**
+     * Interroga il database per contare quanti messaggi ha pubblicato un utente.
+     *
+     * @param userId l'ID dell'autore
+     * @return il numero complessivo di messaggi pubblicati
+     */
     @Transactional(readOnly = true)
     public long getPublishedMessagesCount(Long userId) {
         return messageRepository.countByAuthor_Id(userId);
     }
 
+    /**
+     * Genera la timeline personalizzata (feed) per la home page di un utente.
+     * <p>
+     * Il feed include aggregandoli sia i messaggi scritti in prima persona dall'utente,
+     * sia i messaggi pubblicati da tutte le persone incluse nella sua lista dei seguiti.
+     * </p>
+     *
+     * @param userId l'ID dell'utente che richiede la timeline
+     * @return la lista di {@link Message} ordinati dal più recente
+     */
     @Transactional(readOnly = true)
     public List<Message> getFeedMessages(Long userId) {
         User user = getUserById(userId);
-
         List<Long> authorIds = new ArrayList<>();
 
-        // Mostro anche i messaggi dell'utente loggato
         authorIds.add(user.getId());
 
-        // Mostro i messaggi degli utenti che lui segue
         user.getFollowing().stream()
                 .map(User::getId)
                 .filter(id -> !userId.equals(id))
@@ -312,10 +316,10 @@ public class TwitterService {
     }
 
     /**
-     * Recupera i messaggi pubblicati dall'utente loggato, dal più recente al meno recente.
+     * Recupera l'elenco dei messaggi pubblicati esclusivamente dall'utente specificato.
      *
-     * @param userId ID dell'utente
-     * @return lista dei messaggi personali
+     * @param userId l'ID dell'autore
+     * @return la lista cronologica decrescente dei messaggi personali
      */
     @Transactional(readOnly = true)
     public List<Message> getOwnMessages(Long userId) {
@@ -323,10 +327,10 @@ public class TwitterService {
     }
 
     /**
-     * Recupera gli utenti seguiti dall'utente indicato.
+     * Estrae la lista degli utenti seguiti ordinandoli alfabeticamente per username.
      *
-     * @param userId ID dell'utente
-     * @return lista degli utenti seguiti ordinata per username
+     * @param userId l'ID dell'utente di riferimento
+     * @return la lista ordinata di tipo {@link User}
      */
     @Transactional(readOnly = true)
     public List<User> getFollowingUsers(Long userId) {
@@ -338,10 +342,10 @@ public class TwitterService {
     }
 
     /**
-     * Recupera gli utenti che seguono l'utente indicato.
+     * Estrae la lista dei follower di un utente ordinandoli alfabeticamente per username.
      *
-     * @param userId ID dell'utente
-     * @return lista dei follower ordinata per username
+     * @param userId l'ID dell'utente di riferimento
+     * @return la lista ordinata dei follower
      */
     @Transactional(readOnly = true)
     public List<User> getFollowersUsers(Long userId) {
@@ -352,18 +356,25 @@ public class TwitterService {
                 .toList();
     }
 
+    /**
+     * Conta le notifiche non lette presenti per un utente.
+     *
+     * @param userId l'ID dell'utente destinatario
+     * @return il numero di notifiche pendenti
+     */
     @Transactional(readOnly = true)
     public long getUnreadNotificationsCount(Long userId) {
         return notificationRepository.countByRecipient_IdAndReadFalse(userId);
     }
 
     /**
-     * Aggiorna la password dell'utente dopo aver verificato quella attuale.
+     * Modifica la password di sicurezza dell'utente previa convalida della password corrente.
      *
-     * @param userId ID dell'utente loggato
-     * @param currentPassword password attuale
-     * @param newPassword nuova password
-     * @param confirmPassword conferma nuova password
+     * @param userId          l'ID dell'utente richiedente
+     * @param currentPassword la password attuale in chiaro da verificare
+     * @param newPassword     la nuova credenziale da impostare (minimo 6 caratteri)
+     * @param confirmPassword la stringa di controllo per la verifica di battitura della nuova password
+     * @throws IllegalArgumentException se uno dei controlli di coerenza o validità fallisce
      */
     @Transactional
     public void changePassword(Long userId, String currentPassword, String newPassword, String confirmPassword) {
@@ -387,11 +398,12 @@ public class TwitterService {
     }
 
     /**
-     * Salva l'immagine profilo dell'utente nella cartella uploads/avatars e memorizza
-     * il percorso pubblico nel database.
+     * Gestisce il caricamento del file d'immagine delegando la persistenza al driver
+     * di storage e aggiornando il record dell'utente con l'URL virtuale restituito.
      *
-     * @param userId ID dell'utente
-     * @param avatar file immagine caricato dal form
+     * @param userId l'ID dell'utente proprietario del profilo
+     * @param avatar il file binario multimediale proveniente dal client
+     * @throws IllegalStateException se si riscontrano eccezioni bloccanti di I/O su disco
      */
     @Transactional
     public void updateProfileImage(Long userId, MultipartFile avatar) {
@@ -407,20 +419,17 @@ public class TwitterService {
     }
 
     /**
-     * Elimina un messaggio pubblicato dall'utente loggato.
+     * Consente la rimozione fisica di un messaggio assicurando preventivamente
+     * il diritto di proprietà da parte dell'attore loggato.
      *
-     * <p>Il controllo sull'autore evita che un utente possa eliminare messaggi
-     * pubblicati da altri utenti.</p>
-     *
-     * @param userId ID dell'utente loggato
-     * @param messageId ID del messaggio da eliminare
+     * @param userId    l'ID dell'utente che impartisce il comando di cancellazione
+     * @param messageId l'ID del messaggio da rimuovere dal database
+     * @throws IllegalArgumentException se il messaggio non esiste o se l'autore non coincide con l'utente loggato
      */
     @Transactional
     public void deleteOwnMessage(Long userId, Long messageId) {
         Message message = messageRepository.findById(messageId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Messaggio con ID " + messageId + " non trovato"
-                ));
+                .orElseThrow(() -> new IllegalArgumentException("Messaggio con ID " + messageId + " non trovato"));
 
         if (message.getAuthor() == null || !message.getAuthor().getId().equals(userId)) {
             throw new IllegalArgumentException("Puoi eliminare solo i messaggi pubblicati da te.");
@@ -431,37 +440,29 @@ public class TwitterService {
     }
 
     /**
-     * Pubblica un nuovo messaggio nel sistema.
+     * Esegue il ciclo completo di composizione, persistenza, instradamento e notifica di un nuovo post.
+     * <p>
+     * Questa procedura applica in sequenza:
+     * 1. Il recupero dell'anagrafica autore.
+     * 2. L'indicizzazione/creazione automatica dell'{@link Hashtag}.
+     * 3. La strutturazione del messaggio tramite {@link MessageBuilder}.
+     * 4. Il buffering sul canale di notifica tramite il pattern <b>Factory Method</b>.
+     * 5. Il rilascio dell'evento globale verso i follower tramite l'infrastruttura <b>Observer</b>.
+     * </p>
      *
-     * <p><strong>Processo:</strong></p>
-     * <ol>
-     *   <li>Trova l'autore del messaggio.</li>
-     *   <li>Crea o recupera l'hashtag (se specificato).</li>
-     *   <li>Costruisce il messaggio con MessageBuilder (validazione della lunghezza).</li>
-     *   <li>Salva il messaggio nel database.</li>
-     *   <li>Invia il messaggio tramite il canale specificato (Factory Method).</li>
-     *   <li>Notifica i follower tramite Observer pattern.</li>
-     * </ol>
-     *
-     * @param authorId l'ID dell'autore del messaggio
-     * @param content il contenuto del messaggio (max 140 caratteri)
-     * @param hashtagName il nome dell'hashtag (opzionale, può essere null)
-     * @param channel il canale di invio (WEB, SMS, EMAIL, IM)
-     * @return il messaggio pubblicato
-     * @throws IllegalArgumentException se l'autore non esiste
-     * @throws com.BuonoRiccitiello.twitter.exception.MessageTooLongException se il contenuto supera 140 caratteri
+     * @param authorId    l'ID dell'utente autore del post
+     * @param content     il testo del messaggio (soggetto alle regole di validazione del Builder)
+     * @param hashtagName la stringa dell'hashtag da associare (senza simbolo '#', opzionale)
+     * @param channel     la tipologia enumerativa del canale sorgente dell'invio
+     * @return il {@link Message} memorizzato ed elaborato con successo
      */
     @Transactional
     public Message postMessage(Long authorId, String content, String hashtagName, Channel channel) {
         logger.info("Pubblicazione messaggio da autore ID={} via {}", authorId, channel);
 
-        // 1. Trova l'autore
         User author = userRepository.findById(authorId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Autore con ID " + authorId + " non trovato"
-                ));
+                .orElseThrow(() -> new IllegalArgumentException("Autore con ID " + authorId + " non trovato"));
 
-        // 2. Crea o recupera l'hashtag
         Hashtag hashtag = null;
         if (hashtagName != null && !hashtagName.trim().isEmpty()) {
             hashtag = hashtagRepository.findByName(hashtagName)
@@ -472,7 +473,6 @@ public class TwitterService {
                     });
         }
 
-        // 3. Costruisce il messaggio con MessageBuilder (validazione inclusa)
         Message message = new MessageBuilder()
                 .withAuthor(author)
                 .withContent(content)
@@ -480,28 +480,29 @@ public class TwitterService {
                 .withChannel(channel)
                 .build();
 
-        // 4. Salva nel database
         message = messageRepository.save(message);
         logger.info("Messaggio ID={} pubblicato da '{}' (lunghezza: {})",
                 message.getId(), author.getUsername(), content.length());
 
-        // 5. Invia tramite il canale (Factory Method)
+        // Factory Method: Istanziazione polimorfa e invio sul canale logico corretto
         MessageChannel messageChannel = channelFactory.createChannel(channel);
         messageChannel.send(message);
 
-        // 6. Notifica i follower (Observer pattern)
+        // Observer Pattern: Notifica asincrona e disaccoppiata della rete di follower
         userSubject.notifyNewMessage(message);
 
         return message;
     }
 
     /**
-     * Elimina un utente dal sistema (operazione amministrativa).
+     * Esegue l'eliminazione amministrativa totale di un account utente e delle sue dipendenze.
+     * <p>
+     * Sfrutta il pattern <b>Command</b> per incapsulare l'intera sequenza distruttiva in un'unità
+     * di lavoro atomica, gestita dall'invoker di sistema.
+     * </p>
      *
-     * <p>Utilizza il pattern Command per incapsulare l'operazione di eliminazione.</p>
-     *
-     * @param userId l'ID dell'utente da eliminare
-     * @throws com.BuonoRiccitiello.twitter.exception.UserNotFoundException se l'utente non esiste
+     * @param userId l'ID dell'utente da estirpare dal sistema
+     * @throws IllegalStateException se l'esecuzione del comando restituisce un esito fallimentare
      */
     @Transactional
     public void adminDeleteUser(Long userId) {
@@ -523,13 +524,15 @@ public class TwitterService {
     }
 
     /**
-     * Recupera i messaggi filtrati per hashtag (operazione amministrativa).
+     * Interroga l'archivio storico dei messaggi filtrandoli per hashtag specifico.
+     * <p>
+     * Delega l'estrazione dati a un oggetto comando specializzato del pattern <b>Command</b>.
+     * </p>
      *
-     * <p>Utilizza il pattern Command per incapsulare l'operazione di ricerca.</p>
-     *
-     * @param hashtagName il nome dell'hashtag da cercare
-     * @return la lista di messaggi con l'hashtag specificato
+     * @param hashtagName la stringa testuale del tag da ricercare
+     * @return la {@link List} di messaggi associati, oppure una lista vuota in caso di anomalie di cast
      */
+    @SuppressWarnings("unchecked")
     @Transactional(readOnly = true)
     public List<Message> adminViewByHashtag(String hashtagName) {
         logger.info("Ricerca messaggi per hashtag: '{}'", hashtagName);
@@ -549,9 +552,9 @@ public class TwitterService {
     }
 
     /**
-     * Recupera tutti gli utenti del sistema.
+     * Estrae la totalità degli utenti registrati all'applicazione senza filtri.
      *
-     * @return la lista di tutti gli utenti
+     * @return l'elenco completo degli utenti
      */
     @Transactional(readOnly = true)
     public List<User> getAllUsers() {
@@ -559,14 +562,13 @@ public class TwitterService {
     }
 
     /**
-     * Recupera un utente per username.
+     * Esegue una ricerca puntuale basata sulla stringa dello username.
      *
      * @param username lo username da cercare
-     * @return l'utente se trovato, altrimenti un Optional vuoto
+     * @return l'oggetto {@link User} se presente, altrimenti {@code null}
      */
     @Transactional(readOnly = true)
     public User getUserByUsername(String username) {
-        return userRepository.findByUsername(username)
-                .orElse(null);
+        return userRepository.findByUsername(username).orElse(null);
     }
 }
